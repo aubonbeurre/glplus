@@ -3,13 +3,17 @@ package glplus
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
-	_ "image/png" // just because
-	"os"
+	"io/ioutil"
 	"path"
 	"runtime"
 
 	gl "github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	ifont "golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 )
 
 var (
@@ -44,233 +48,6 @@ var (
   }`
 )
 
-var gWidths = [...]int{
-	19,  // 32
-	24,  // 33
-	35,  // 34
-	47,  // 35
-	47,  // 36
-	75,  // 37
-	86,  // 38
-	19,  // 39
-	31,  // 40
-	31,  // 41
-	31,  // 42
-	47,  // 43
-	26,  // 44
-	38,  // 45
-	26,  // 46
-	35,  // 47
-	47,  // 48
-	47,  // 49
-	47,  // 50
-	47,  // 51
-	47,  // 52
-	47,  // 53
-	47,  // 54
-	47,  // 55
-	47,  // 56
-	47,  // 57
-	26,  // 58
-	26,  // 59
-	47,  // 60
-	47,  // 61
-	47,  // 62
-	36,  // 63
-	75,  // 64
-	68,  // 65
-	65,  // 66
-	71,  // 67
-	79,  // 68
-	65,  // 69
-	59,  // 70
-	79,  // 71
-	82,  // 72
-	39,  // 73
-	34,  // 74
-	70,  // 75
-	62,  // 76
-	93,  // 77
-	76,  // 78
-	81,  // 79
-	60,  // 80
-	82,  // 81
-	69,  // 82
-	54,  // 83
-	69,  // 84
-	69,  // 85
-	64,  // 86
-	99,  // 87
-	65,  // 88
-	58,  // 89
-	66,  // 90
-	33,  // 91
-	35,  // 92
-	33,  // 93
-	47,  // 94
-	47,  // 95
-	22,  // 96
-	43,  // 97
-	49,  // 98
-	41,  // 99
-	51,  // 100
-	42,  // 101
-	31,  // 102
-	47,  // 103
-	53,  // 104
-	27,  // 105
-	25,  // 106
-	49,  // 107
-	27,  // 108
-	77,  // 109
-	53,  // 110
-	49,  // 111
-	51,  // 112
-	50,  // 113
-	34,  // 114
-	36,  // 115
-	32,  // 116
-	51,  // 117
-	45,  // 118
-	64,  // 119
-	40,  // 120
-	42,  // 121
-	43,  // 122
-	33,  // 123
-	33,  // 124
-	33,  // 125
-	47,  // 126
-	47,  // 127
-	47,  // 128
-	47,  // 129
-	19,  // 130
-	47,  // 131
-	38,  // 132
-	94,  // 133
-	47,  // 134
-	47,  // 135
-	29,  // 136
-	109, // 137
-	54,  // 138
-	25,  // 139
-	109, // 140
-	47,  // 141
-	66,  // 142
-	47,  // 143
-	47,  // 144
-	19,  // 145
-	19,  // 146
-	38,  // 147
-	38,  // 148
-	32,  // 149
-	47,  // 150
-	94,  // 151
-	32,  // 152
-	86,  // 153
-	36,  // 154
-	25,  // 155
-	71,  // 156
-	47,  // 157
-	43,  // 158
-	58,  // 159
-	19,  // 160
-	24,  // 161
-	47,  // 162
-	47,  // 163
-	47,  // 164
-	47,  // 165
-	33,  // 166
-	51,  // 167
-	34,  // 168
-	78,  // 169
-	34,  // 170
-	41,  // 171
-	47,  // 172
-	38,  // 173
-	53,  // 174
-	28,  // 175
-	30,  // 176
-	47,  // 177
-	34,  // 178
-	34,  // 179
-	22,  // 180
-	51,  // 181
-	54,  // 182
-	26,  // 183
-	25,  // 184
-	34,  // 185
-	37,  // 186
-	41,  // 187
-	75,  // 188
-	75,  // 189
-	75,  // 190
-	34,  // 191
-	68,  // 192
-	68,  // 193
-	68,  // 194
-	68,  // 195
-	68,  // 196
-	68,  // 197
-	90,  // 198
-	71,  // 199
-	65,  // 200
-	65,  // 201
-	65,  // 202
-	65,  // 203
-	39,  // 204
-	39,  // 205
-	39,  // 206
-	39,  // 207
-	79,  // 208
-	76,  // 209
-	81,  // 210
-	81,  // 211
-	81,  // 212
-	81,  // 213
-	81,  // 214
-	47,  // 215
-	81,  // 216
-	69,  // 217
-	69,  // 218
-	69,  // 219
-	69,  // 220
-	58,  // 221
-	61,  // 222
-	54,  // 223
-	43,  // 224
-	43,  // 225
-	43,  // 226
-	43,  // 227
-	43,  // 228
-	43,  // 229
-	64,  // 230
-	41,  // 231
-	42,  // 232
-	42,  // 233
-	42,  // 234
-	42,  // 235
-	27,  // 236
-	27,  // 237
-	27,  // 238
-	27,  // 239
-	48,  // 240
-	53,  // 241
-	49,  // 242
-	49,  // 243
-	49,  // 244
-	49,  // 245
-	49,  // 246
-	47,  // 247
-	49,  // 248
-	51,  // 249
-	51,  // 250
-	51,  // 251
-	51,  // 252
-	42,  // 253
-	51,  // 254
-	42,  // 255
-}
-
 // Char ...
 type Char struct {
 	Index int
@@ -283,6 +60,7 @@ type String struct {
 	Chars []Char
 	Size  image.Point
 	vbo   *VBO
+	font  *Font
 }
 
 // DeleteString ...
@@ -361,7 +139,7 @@ func (s *String) createVertexBuffer(f *Font) {
 		var c = s.Chars[j]
 		var x = curX
 		var y float32
-		var w = float32(gWidths[c.Index])
+		var w = float32(f.advances[c.Index])
 		var h = float32(f.cellssize)
 		var u = float32(c.X*f.cellssize) / float32(f.texture.Size.X)
 		var v = float32(c.Y*f.cellssize) / float32(f.texture.Size.Y)
@@ -416,6 +194,7 @@ type Font struct {
 	program   *Program
 	rows      int
 	cellssize int
+	advances  []int
 }
 
 // DeleteFont ...
@@ -440,14 +219,18 @@ func (f *Font) UnbindTexture(unit uint32) {
 
 // NewString ...
 func (f *Font) NewString(s string) *String {
-	var result = &String{make([]Char, len(s)), image.Point{0, 0}, nil}
+	var result = &String{
+		Chars: make([]Char, len(s)),
+		Size:  image.Point{0, 0},
+		font:  f,
+	}
 	var width int
 	for i := 0; i < len(s); i++ {
 		var ascii = int(s[i])
 		var index = ascii - 32
 		var xoff = index % f.rows
 		var yoff = index / f.rows
-		width += gWidths[index]
+		width += f.advances[index]
 
 		//fmt.Printf("ascii: %d, x: %d, y: %d\n", ascii, xoff, yoff)
 		result.Chars[i].Index = index
@@ -460,28 +243,67 @@ func (f *Font) NewString(s string) *String {
 }
 
 // NewFont ...
-func NewFont(rows int) (font *Font, err error) {
+func NewFont(fontName string) (font *Font, err error) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return nil, fmt.Errorf("%s", "No caller information")
 	}
 
-	var imgFile *os.File
-	if imgFile, err = os.Open(path.Join(path.Dir(filename), "Font.png")); err != nil {
+	// Read the font data.
+	var fontBytes []byte
+	if fontBytes, err = ioutil.ReadFile(path.Join(path.Dir(filename), fontName)); err != nil {
 		return nil, err
 	}
-	defer imgFile.Close()
-
-	var img image.Image
-	if img, _, err = image.Decode(imgFile); err != nil {
+	var f *truetype.Font
+	if f, err = freetype.ParseFont(fontBytes); err != nil {
 		return nil, err
 	}
+	const fontSize = 48
+	var face ifont.Face
+	face = truetype.NewFace(f, &truetype.Options{Size: fontSize})
+	height := face.Metrics().Height.Round()
+	descent := face.Metrics().Descent.Round()
+	fmt.Printf("Height: %d\n", height)
 
-	gray := image.NewGray(img.Bounds())
+	dst := image.NewRGBA(image.Rect(0, 0, height*16, height*16))
+	black := color.RGBA{0, 0, 0, 255}
+	draw.Draw(dst, dst.Bounds(), &image.Uniform{black}, image.ZP, draw.Src)
+
+	d := &ifont.Drawer{
+		Dst:  dst,
+		Src:  image.White,
+		Face: face,
+	}
+
+	var advances = make([]int, 256-32)
+	var offx int
+	var offy = height
+	for i := 32; i < 255; i++ {
+		d.Dot = fixed.P(offx, offy-descent)
+		var strc = string(i)
+		d.DrawString(strc)
+		if advance, ok := face.GlyphAdvance(rune(strc[0])); ok {
+			advances[i-32] = advance.Round()
+		} else {
+			advances[i-32] = 0
+		}
+
+		offx += height
+		if offx >= height*16 {
+			offy += height
+			offx = 0
+		}
+	}
+
+	//w, _ := os.Create("/Users/aparente/font.png")
+	//defer w.Close()
+	//png.Encode(w, dst) //Encode writes the Image m to w in PNG format.
+
+	gray := image.NewGray(dst.Bounds())
 	if gray.Stride != gray.Rect.Size().X {
 		return nil, fmt.Errorf("unsupported stride")
 	}
-	draw.Draw(gray, gray.Bounds(), img, image.Point{0, 0}, draw.Src)
+	draw.Draw(gray, gray.Bounds(), dst, image.Point{0, 0}, draw.Src)
 
 	var texture = GenTexture(gray.Rect.Size())
 
@@ -501,7 +323,12 @@ func NewFont(rows int) (font *Font, err error) {
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(gray.Pix))
 
-	font = &Font{texture, nil, rows, gray.Rect.Size().X / rows}
+	font = &Font{
+		texture:   texture,
+		rows:      16,
+		cellssize: gray.Rect.Size().X / 16,
+		advances:  advances,
+	}
 
 	return font, nil
 }
