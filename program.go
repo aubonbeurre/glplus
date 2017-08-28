@@ -111,6 +111,12 @@ func (p *Program) ProgramUniformMatrix4fv(uniform string, matrix [16]float32) {
 	gl.ProgramUniformMatrix4fv(p.prog, uniformloc, 1, false, &matrix[0])
 }
 
+// ProgramUniformMatrix3fv ...
+func (p *Program) ProgramUniformMatrix3fv(uniform string, matrix [9]float32) {
+	var uniformloc = p.GetUniformLocation(uniform)
+	gl.ProgramUniformMatrix3fv(p.prog, uniformloc, 1, false, &matrix[0])
+}
+
 // GetShaderInfoLog ...
 func GetShaderInfoLog(shader uint32) string {
 	var logSize int32

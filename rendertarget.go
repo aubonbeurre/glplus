@@ -2,6 +2,9 @@ package glplus
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"unsafe"
 
 	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
@@ -61,6 +64,25 @@ func (r *RenderTarget) Bind(tex *Texture) {
 // Unbind ...
 func (r *RenderTarget) Unbind(tex *Texture) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.Flush()
+}
+
+// ReadBuffer ...
+func (r *RenderTarget) ReadBuffer(w, h int) (newImage *image.RGBA) {
+	gl.Flush()
+	gl.ReadBuffer(gl.COLOR_ATTACHMENT0)
+
+	var pix = make([]float32, w*h*4)
+	gl.ReadPixels(0, 0, int32(w), int32(h), gl.RGBA, gl.FLOAT, unsafe.Pointer(&pix[0]))
+
+	newImage = image.NewRGBA(image.Rect(0, 0, w, h))
+	for j := 0; j < h; j++ {
+		for i := 0; i < w; i++ {
+			ind := j*w*4 + i*4
+			newImage.SetRGBA(i, j, color.RGBA{uint8(pix[ind+0] * 255), uint8(pix[ind+1] * 255), uint8(pix[ind+2] * 255), uint8(pix[ind+3] * 255)})
+		}
+	}
+	return newImage
 }
 
 // NewRenderTarget ...
