@@ -41,8 +41,8 @@ func checkFramebufferStatus() string {
 	panic(fmt.Errorf("Unknown error %d", status))
 }
 
-// ReadyToRender ...
-func (r *RenderTarget) ReadyToRender(tex *Texture) {
+// Bind ...
+func (r *RenderTarget) Bind(tex *Texture) {
 	// Bind the frame-buffer object and attach to it a render-buffer object set up as a depth-buffer.
 	gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbuffer)
 
@@ -56,6 +56,11 @@ func (r *RenderTarget) ReadyToRender(tex *Texture) {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		panic(fmt.Errorf("Canot continue error %s", status))
 	}
+}
+
+// Unbind ...
+func (r *RenderTarget) Unbind(tex *Texture) {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 }
 
 // NewRenderTarget ...
