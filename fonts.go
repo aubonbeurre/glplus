@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	gl "github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	ifont "golang.org/x/image/font"
@@ -39,12 +40,11 @@ var (
   in vec2 uvs;
   out vec4 out_pos;
   out vec2 out_uvs;
-  uniform mat4 ModelviewMatrix;
+  uniform mat3 ModelviewMatrix;
   void main()
   {
-      out_pos = ModelviewMatrix * position;
-      gl_Position = out_pos;
-      out_uvs = uvs;
+		gl_Position = vec4(ModelviewMatrix * vec3(position.xy, 1.0), 0.0).xywz;
+  	out_uvs = uvs;
   }`
 )
 
@@ -71,7 +71,7 @@ func (s *String) DeleteString() {
 }
 
 // Draw ...
-func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat Matrix2x3, scale float32, offsetX float32, offsetY float32) (err error) {
+func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, scale float32, offsetX float32, offsetY float32) (err error) {
 	if s.vbo == nil {
 		s.createVertexBuffer(f)
 	}
@@ -89,9 +89,9 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat Matrix2x3, s
 	f.texture.BindTexture(0)
 	s.vbo.Bind()
 
-	var matrixfont = mat.Scale(scale, scale)
-	matrixfont = matrixfont.Translate(offsetX, offsetY)
-	f.program.ProgramUniformMatrix4fv("ModelviewMatrix", matrixfont.Array())
+	var matrixfont = mat.Mul3(mgl32.Scale2D(scale, scale))
+	matrixfont = matrixfont.Mul3(mgl32.Translate2D(offsetX, offsetY))
+	f.program.ProgramUniformMatrix3fv("ModelviewMatrix", matrixfont)
 	f.program.ProgramUniform1i("tex1", 0)
 	f.program.ProgramUniform4fv("color", color)
 	f.program.ProgramUniform4fv("bg", bg)
