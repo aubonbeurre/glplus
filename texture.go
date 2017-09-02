@@ -48,25 +48,11 @@ func (t *Texture) UnbindTexture(unit uint32) {
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 }
 
-// NewTexture ...
-func NewTexture(file string, linear bool, repeat bool) (texture *Texture, img image.Image, err error) {
-	var imgFile *os.File
-	if imgFile, err = os.Open(file); err != nil {
-		return nil, img, err
-	}
-	defer imgFile.Close()
-
-	if img, _, err = image.Decode(imgFile); err != nil {
-		return nil, img, err
-	}
-
-	var rgba *image.RGBA
-
-	rgba = image.NewRGBA(img.Bounds())
+// NewRGBATexture ...
+func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *Texture, err error) {
 	if rgba.Stride != rgba.Rect.Size().X*4 {
-		return nil, img, fmt.Errorf("unsupported stride")
+		return nil, fmt.Errorf("unsupported stride")
 	}
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
 
 	texture = GenTexture(rgba.Rect.Size())
 
@@ -95,6 +81,31 @@ func NewTexture(file string, linear bool, repeat bool) (texture *Texture, img im
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(rgba.Pix))
+	texture.UnbindTexture(0)
+
+	return texture, nil
+}
+
+// LoadTexture ...
+func LoadTexture(file string, linear, repeat bool) (texture *Texture, img image.Image, err error) {
+	var imgFile *os.File
+	if imgFile, err = os.Open(file); err != nil {
+		return nil, img, err
+	}
+	defer imgFile.Close()
+
+	if img, _, err = image.Decode(imgFile); err != nil {
+		return nil, img, err
+	}
+
+	var rgba *image.RGBA
+
+	rgba = image.NewRGBA(img.Bounds())
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+
+	if texture, err = NewRGBATexture(rgba, linear, repeat); err != nil {
+		return nil, img, err
+	}
 
 	return texture, img, nil
 }
