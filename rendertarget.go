@@ -11,9 +11,11 @@ import (
 
 // RenderTarget ...
 type RenderTarget struct {
-	fbuffer uint32
-	rbuffer uint32
-	Tex     *Texture
+	fbuffer  uint32
+	rbuffer  uint32
+	zbuffer  uint32
+	hasDepth bool
+	Tex      *Texture
 }
 
 // Delete ...
@@ -23,6 +25,9 @@ func (r *RenderTarget) Delete() {
 	}
 	if r.rbuffer != 0 {
 		gl.DeleteRenderbuffers(1, &r.rbuffer)
+	}
+	if r.zbuffer != 0 {
+		gl.DeleteRenderbuffers(1, &r.zbuffer)
 	}
 	if r.Tex != nil {
 		r.Tex.DeleteTexture()
@@ -79,6 +84,11 @@ func (r *RenderTarget) Bind(tex *Texture) {
 	// Bind the frame-buffer object and attach to it a render-buffer object set up as a depth-buffer.
 	gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbuffer)
 
+	if r.hasDepth {
+		gl.BindRenderbuffer(gl.RENDERBUFFER, r.zbuffer)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT, int32(tex.Size.X), int32(tex.Size.Y))
+	}
+
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex.Handle(), 0)
 
 	// Set the render target - primary surface
@@ -116,22 +126,37 @@ func (r *RenderTarget) ReadBuffer(w, h int) (newImage *image.RGBA) {
 }
 
 // NewRenderTarget ...
-func NewRenderTarget() (r *RenderTarget) {
+func NewRenderTarget(hasDepth bool) (r *RenderTarget) {
+	const msaa = 4
+	var rbuffer, zbuffer uint32
+	//now create the color render buffer
+	gl.GenRenderbuffers(1, &rbuffer)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, rbuffer)
+	//gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, msaa, GL_RGB8, width, height);
+
+	if hasDepth {
+		gl.GenRenderbuffers(1, &zbuffer)
+		gl.BindRenderbuffer(gl.RENDERBUFFER, zbuffer)
+		//gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, msaa, GL_DEPTH_COMPONENT, width, height);
+	}
+
 	var fbuffer uint32
 	//create the color buffer to render to
 	gl.GenFramebuffers(1, &fbuffer)
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbuffer)
 
-	var rbuffer uint32
-	//now create the color render buffer
-	gl.GenRenderbuffers(1, &rbuffer)
-	gl.BindRenderbuffer(gl.RENDERBUFFER, rbuffer)
+	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rbuffer)
+	if hasDepth {
+		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, zbuffer)
+	}
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	r = &RenderTarget{
-		fbuffer: fbuffer,
-		rbuffer: rbuffer,
+		fbuffer:  fbuffer,
+		rbuffer:  rbuffer,
+		zbuffer:  zbuffer,
+		hasDepth: hasDepth,
 	}
 	return r
 }
