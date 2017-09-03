@@ -13,6 +13,7 @@ import (
 type RenderTarget struct {
 	fbuffer uint32
 	rbuffer uint32
+	Tex     *Texture
 }
 
 // Delete ...
@@ -22,6 +23,35 @@ func (r *RenderTarget) Delete() {
 	}
 	if r.rbuffer != 0 {
 		gl.DeleteRenderbuffers(1, &r.rbuffer)
+	}
+	if r.Tex != nil {
+		r.Tex.DeleteTexture()
+	}
+}
+
+// EnsureSize ...
+func (r *RenderTarget) EnsureSize(size image.Point) {
+	if r.Tex == nil || r.Tex.Size.X != size.X || r.Tex.Size.Y != size.Y {
+		if r.Tex != nil {
+			r.Tex.DeleteTexture()
+		}
+		r.Tex = GenTexture(image.Point{size.X, size.Y})
+		r.Tex.BindTexture(0)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		gl.TexImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			int32(size.X),
+			int32(size.Y),
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			nil)
+		r.Tex.UnbindTexture(0)
 	}
 }
 
