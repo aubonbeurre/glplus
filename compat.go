@@ -634,6 +634,10 @@ func NewContext() *Context {
 // Gl may become engo.Gl (Gl = glplus.NewContext())
 var Gl *Context
 
+func (c *Context) Version() string {
+	return gl.GoStr(gl.GetString(gl.VERSION))
+}
+
 func (c *Context) Ptr(data interface{}) unsafe.Pointer {
 	return gl.Ptr(data)
 }
@@ -855,6 +859,10 @@ func (c *Context) DrawElements(mode, count, typ, offset int) {
 
 func (c *Context) ClearColor(r, g, b, a float32) {
 	gl.ClearColor(r, g, b, a)
+}
+
+func (c *Context) Clear(flags int) {
+	gl.Clear(uint32(flags))
 }
 
 func (c *Context) Viewport(x, y, width, height int) {
