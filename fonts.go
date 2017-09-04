@@ -315,9 +315,11 @@ func NewFont(fontName string) (font *Font, err error) {
 		Gl.TEXTURE_2D,
 		0,
 		Gl.R8,
+		gray.Rect.Size().X,
+		gray.Rect.Size().Y,
 		Gl.RED,
 		Gl.UNSIGNED_BYTE,
-		gray)
+		Gl.Ptr(gray.Pix))
 
 	font = &Font{
 		texture:   texture,

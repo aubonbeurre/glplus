@@ -44,14 +44,15 @@ func (r *RenderTarget) EnsureSize(size image.Point) {
 		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.NEAREST)
 		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.CLAMP_TO_EDGE)
 		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.CLAMP_TO_EDGE)
-		Gl.TexImage2DEmpty(
+		Gl.TexImage2D(
 			Gl.TEXTURE_2D,
 			0,
 			Gl.RGBA,
 			size.X,
 			size.Y,
 			Gl.RGBA,
-			Gl.UNSIGNED_BYTE)
+			Gl.UNSIGNED_BYTE,
+			nil)
 		r.Tex.UnbindTexture(0)
 	}
 }

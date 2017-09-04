@@ -1,8 +1,6 @@
 package glplus
 
 import (
-	"fmt"
-	"image"
 	"log"
 	"reflect"
 	"unsafe"
@@ -214,6 +212,7 @@ type Context struct {
 	RGB5_A1                                      int
 	RGB565                                       int
 	RGBA                                         int
+	RGBA32F                                      int
 	RGBA4                                        int
 	SAMPLER_2D                                   int
 	SAMPLER_CUBE                                 int
@@ -511,6 +510,7 @@ func NewContext() *Context {
 		RGB5_A1:                      gl.RGB5_A1,
 		RGB565:                       gl.RGB565,
 		RGBA:                         gl.RGBA,
+		RGBA32F:                      gl.RGBA32F,
 		RGBA4:                        gl.RGBA4,
 		SAMPLER_2D:                   gl.SAMPLER_2D,
 		SAMPLER_CUBE:                 gl.SAMPLER_CUBE,
@@ -631,6 +631,10 @@ func NewContext() *Context {
 
 // Gl may become engo.Gl (Gl = glplus.NewContext())
 var Gl *Context
+
+func (c *Context) Ptr(data interface{}) unsafe.Pointer {
+	return gl.Ptr(data)
+}
 
 func (c *Context) DeleteProgram(program *ENGOGLProgram) {
 	gl.DeleteProgram(program.uint32)
@@ -877,36 +881,8 @@ func (c *Context) TexParameteri(target int, pname int, param int) {
 	gl.TexParameteri(uint32(target), uint32(pname), int32(param))
 }
 
-func (c *Context) TexImage2D(target, level, internalFormat, format, kind int, data interface{}) {
-	var pix []uint8
-	width := 0
-	height := 0
-	if data == nil {
-		pix = nil
-	} else {
-
-		switch img := data.(type) {
-		case *image.NRGBA:
-			width = img.Bounds().Dx()
-			height = img.Bounds().Dy()
-			pix = img.Pix
-		case *image.RGBA:
-			width = img.Bounds().Dx()
-			height = img.Bounds().Dy()
-			pix = img.Pix
-		case *image.Gray:
-			width = img.Bounds().Dx()
-			height = img.Bounds().Dy()
-			pix = img.Pix
-		default:
-			panic(fmt.Errorf("Image type unsupported: %T", img))
-		}
-	}
-	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), gl.Ptr(pix))
-}
-
-func (c *Context) TexImage2DEmpty(target, level, internalFormat, width, height, format, kind int) {
-	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), nil)
+func (c *Context) TexImage2D(target, level, internalFormat, width, height, format, kind int, pixels unsafe.Pointer) {
+	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), pixels)
 }
 
 func (c *Context) DeleteRenderBuffer(vao *ENGOGLRenderBuffer) {
