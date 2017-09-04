@@ -1,16 +1,10 @@
 package glplus
 
-import (
-	"unsafe"
-
-	gl "github.com/go-gl/gl/v4.1-core/gl"
-)
-
 // VBO ...
 type VBO struct {
-	vao        uint32
-	vboVerts   uint32
-	vboIndices uint32
+	vao        *ENGOGLVertexArray
+	vboVerts   *ENGOGLBuffer
+	vboIndices *ENGOGLBuffer
 	numElem    int
 	hasNormals bool
 	isStrip    bool
@@ -18,96 +12,92 @@ type VBO struct {
 
 // DeleteVBO ...
 func (v *VBO) DeleteVBO() {
-	if v.vboVerts != 0 {
-		gl.DeleteBuffers(1, &v.vboVerts)
+	if v.vboVerts != nil {
+		Gl.DeleteBuffer(v.vboVerts)
 	}
-	if v.vboIndices != 0 {
-		gl.DeleteBuffers(1, &v.vboIndices)
+	if v.vboIndices != nil {
+		Gl.DeleteBuffer(v.vboIndices)
 	}
-	if v.vao != 0 {
-		gl.DeleteVertexArrays(1, &v.vao)
+	if v.vao != nil {
+		Gl.DeleteVertexArray(v.vao)
 	}
 }
 
 // Bind ...
 func (v *VBO) Bind() {
-	gl.BindVertexArray(v.vao)
-	gl.EnableVertexAttribArray(gPositionAttr)
-	gl.EnableVertexAttribArray(gUVsAttr)
+	Gl.BindVertexArray(v.vao)
+	Gl.EnableVertexAttribArray(gPositionAttr)
+	Gl.EnableVertexAttribArray(gUVsAttr)
 	if v.hasNormals {
-		gl.EnableVertexAttribArray(gNormalsAttr)
+		Gl.EnableVertexAttribArray(gNormalsAttr)
 	}
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
 }
 
 // Unbind ...
 func (v *VBO) Unbind() {
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-	gl.DisableVertexAttribArray(gPositionAttr)
-	gl.DisableVertexAttribArray(gUVsAttr)
+	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	Gl.DisableVertexAttribArray(gPositionAttr)
+	Gl.DisableVertexAttribArray(gUVsAttr)
 	if v.hasNormals {
-		gl.DisableVertexAttribArray(gNormalsAttr)
+		Gl.DisableVertexAttribArray(gNormalsAttr)
 	}
-	gl.BindVertexArray(0)
+	Gl.BindVertexArray(nil)
 }
 
 // Draw ...
 func (v *VBO) Draw() {
 	if v.isStrip {
-		gl.DrawElements(gl.TRIANGLE_STRIP, int32(v.numElem), gl.UNSIGNED_INT, nil)
+		Gl.DrawElements(Gl.TRIANGLE_STRIP, v.numElem, Gl.UNSIGNED_INT, 0)
 	} else {
-		gl.DrawElements(gl.TRIANGLES, int32(v.numElem), gl.UNSIGNED_INT, nil)
+		Gl.DrawElements(Gl.TRIANGLES, v.numElem, Gl.UNSIGNED_INT, 0)
 	}
 }
 
 // DrawQuads ...
 func (v *VBO) DrawQuads(nquads int) {
-	gl.DrawElements(gl.TRIANGLES, int32(nquads*6), gl.UNSIGNED_INT, nil)
+	Gl.DrawElements(Gl.TRIANGLES, nquads*6, Gl.UNSIGNED_INT, 0)
 }
 
 // Load ...
-func (v *VBO) Load(verts *float32, vsize int, indices *uint32, isize int) {
-	// calculate the memory size of floats used to calculate total memory size of float arrays
-	var floatSize = int(unsafe.Sizeof(float32(1.0)))
-	var intSize = int(unsafe.Sizeof(uint32(1)))
-
-	gl.BindVertexArray(v.vao)
-	gl.BindBuffer(gl.ARRAY_BUFFER, v.vboVerts)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+func (v *VBO) Load(verts []float32, indices []uint32) {
+	Gl.BindVertexArray(v.vao)
+	Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
+	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
 
 	// load our data up and bind it to the 'position' shader attribute
-	gl.BufferData(gl.ARRAY_BUFFER, floatSize*vsize, unsafe.Pointer(verts), gl.STATIC_DRAW)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, intSize*isize, unsafe.Pointer(indices), gl.STATIC_DRAW)
+	Gl.BufferData(Gl.ARRAY_BUFFER, verts, Gl.STATIC_DRAW)
+	Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
 
 	if v.hasNormals {
-		gl.VertexAttribPointer(gPositionAttr, 3, gl.FLOAT, false, 32, gl.PtrOffset(0))
-		gl.VertexAttribPointer(gUVsAttr, 2, gl.FLOAT, false, 32, gl.PtrOffset(12))
-		gl.VertexAttribPointer(gNormalsAttr, 3, gl.FLOAT, false, 32, gl.PtrOffset(20))
+		Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 32, 0)
+		Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 32, 12)
+		Gl.VertexAttribPointer(gNormalsAttr, 3, Gl.FLOAT, false, 32, 20)
 	} else {
-		gl.VertexAttribPointer(gPositionAttr, 3, gl.FLOAT, false, 20, gl.PtrOffset(0))
-		gl.VertexAttribPointer(gUVsAttr, 2, gl.FLOAT, false, 20, gl.PtrOffset(12))
+		Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 20, 0)
+		Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 20, 12)
 
 	}
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-	gl.BindVertexArray(0)
+	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
+	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	Gl.BindVertexArray(nil)
 
-	v.numElem = isize
+	v.numElem = len(indices)
 }
 
 // NewVBO ...
 func NewVBO(isStrip bool) (vbo *VBO) {
 	// create and bind the required VAO object
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
+	var vao *ENGOGLVertexArray
+	vao = Gl.CreateVertexArray()
+	Gl.BindVertexArray(vao)
 
 	// create a VBO to hold the vertex data
-	var vboVerts uint32
-	var vboIndices uint32
-	gl.GenBuffers(1, &vboVerts)
-	gl.GenBuffers(1, &vboIndices)
+	var vboVerts *ENGOGLBuffer
+	var vboIndices *ENGOGLBuffer
+	vboVerts = Gl.CreateBuffer()
+	vboIndices = Gl.CreateBuffer()
 
 	vbo = &VBO{vao: vao,
 		vboVerts:   vboVerts,
@@ -116,7 +106,7 @@ func NewVBO(isStrip bool) (vbo *VBO) {
 		hasNormals: false,
 		isStrip:    isStrip,
 	}
-	gl.BindVertexArray(0)
+	Gl.BindVertexArray(nil)
 	return vbo
 }
 
@@ -136,7 +126,7 @@ func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
 		2, 3, 0,
 	}
 
-	vbo.Load(&verts[0], len(verts), &indices[0], len(indices))
+	vbo.Load(verts[:], indices[:])
 
 	return vbo
 }
@@ -187,7 +177,7 @@ func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32
 		6, 7, 3,
 	}
 
-	vbo.Load(&verts[0], len(verts), &indices[0], len(indices))
+	vbo.Load(verts[:], indices[:])
 
 	return vbo
 }
@@ -252,7 +242,7 @@ func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w f
 		20, 20, 21, 22, 23, // Face 5 - triangle strip (v20, v21, v22, v23)
 	}
 
-	vbo.Load(&verts[0], len(verts), &indices[0], len(indices))
+	vbo.Load(verts[:], indices[:])
 
 	return vbo
 }

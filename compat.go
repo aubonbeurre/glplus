@@ -2,6 +2,7 @@ package glplus
 
 import (
 	"log"
+	"reflect"
 
 	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
@@ -764,4 +765,81 @@ func (c *Context) DeleteTexture(texture *ENGOGLTexture) {
 
 func (c *Context) DeleteBuffer(buffer *ENGOGLBuffer) {
 	gl.DeleteBuffers(1, &[]uint32{buffer.uint32}[0])
+}
+
+func (c *Context) DeleteVertexArray(vao *ENGOGLVertexArray) {
+	gl.DeleteVertexArrays(1, &[]uint32{vao.uint32}[0])
+}
+
+func (c *Context) CreateVertexArray() *ENGOGLVertexArray {
+	var loc uint32
+	gl.GenVertexArrays(1, &loc)
+	return &ENGOGLVertexArray{loc}
+}
+
+func (c *Context) BindVertexArray(vao *ENGOGLVertexArray) {
+	if vao == nil {
+		gl.BindVertexArray(0)
+		return
+	}
+	gl.BindVertexArray(vao.uint32)
+}
+
+func (c *Context) EnableVertexAttribArray(index int) {
+	gl.EnableVertexAttribArray(uint32(index))
+}
+
+func (c *Context) DisableVertexAttribArray(index int) {
+	gl.DisableVertexAttribArray(uint32(index))
+}
+
+func (c *Context) VertexAttribPointer(index, size, typ int, normal bool, stride int, offset int) {
+	gl.VertexAttribPointer(uint32(index), int32(size), uint32(typ), normal, int32(stride), gl.PtrOffset(offset))
+}
+
+func (c *Context) Enable(flag int) {
+	gl.Enable(uint32(flag))
+}
+
+func (c *Context) Disable(flag int) {
+	gl.Disable(uint32(flag))
+}
+
+func (c *Context) BlendFunc(src, dst int) {
+	gl.BlendFunc(uint32(src), uint32(dst))
+}
+
+func (c *Context) BlendEquation(mode int) {
+	gl.BlendEquation(uint32(mode))
+}
+
+func (c *Context) CreateBuffer() *ENGOGLBuffer {
+	var loc uint32
+	gl.GenBuffers(1, &loc)
+	return &ENGOGLBuffer{loc}
+}
+
+func (c *Context) BindBuffer(target int, buffer *ENGOGLBuffer) {
+	if buffer == nil {
+		gl.BindBuffer(uint32(target), 0)
+		return
+	}
+	gl.BindBuffer(uint32(target), buffer.uint32)
+}
+
+func (c *Context) BufferData(target int, data interface{}, usage int) {
+	s := uintptr(reflect.ValueOf(data).Len()) * reflect.TypeOf(data).Elem().Size()
+	gl.BufferData(uint32(target), int(s), gl.Ptr(data), uint32(usage))
+}
+
+func (c *Context) DrawElements(mode, count, typ, offset int) {
+	gl.DrawElements(uint32(mode), int32(count), uint32(typ), gl.PtrOffset(offset))
+}
+
+func (c *Context) ClearColor(r, g, b, a float32) {
+	gl.ClearColor(r, g, b, a)
+}
+
+func (c *Context) Viewport(x, y, width, height int) {
+	gl.Viewport(int32(x), int32(y), int32(width), int32(height))
 }

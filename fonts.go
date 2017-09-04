@@ -185,7 +185,7 @@ func (s *String) createVertexBuffer(f *Font) {
 		curX += w
 	}
 
-	s.vbo.Load(&verts[0], 20*n, &indices[0], 6*n)
+	s.vbo.Load(verts[:], indices[:])
 }
 
 // Font ...
