@@ -6,46 +6,42 @@ import (
 	"image/draw"
 	_ "image/png" // just because
 	"os"
-
-	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
 
 // Texture ...
 type Texture struct {
-	texture uint32
+	texture *ENGOGLTexture
 	Size    image.Point
 }
 
 // GenTexture ...
 func GenTexture(size image.Point) (texture *Texture) {
-	var t uint32
-	gl.GenTextures(1, &t)
-	texture = &Texture{t, size}
+	texture = &Texture{texture: Gl.CreateTexture(), Size: size}
 	return texture
 }
 
 // Handle ...
-func (t *Texture) Handle() uint32 {
+func (t *Texture) Handle() *ENGOGLTexture {
 	return t.texture
 }
 
 // DeleteTexture ...
 func (t *Texture) DeleteTexture() {
-	if t.texture != 0 {
-		gl.DeleteTextures(1, &t.texture)
+	if t.texture != nil {
+		Gl.DeleteTexture(t.texture)
 	}
 }
 
 // BindTexture ...
-func (t *Texture) BindTexture(unit uint32) {
-	gl.ActiveTexture(gl.TEXTURE0 + unit)
-	gl.BindTexture(gl.TEXTURE_2D, t.texture)
+func (t *Texture) BindTexture(unit int) {
+	Gl.ActiveTexture(Gl.TEXTURE0 + unit)
+	Gl.BindTexture(Gl.TEXTURE_2D, t.texture)
 }
 
 // UnbindTexture ...
-func (t *Texture) UnbindTexture(unit uint32) {
-	gl.ActiveTexture(gl.TEXTURE0 + unit)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
+func (t *Texture) UnbindTexture(unit int) {
+	Gl.ActiveTexture(Gl.TEXTURE0 + unit)
+	Gl.BindTexture(Gl.TEXTURE_2D, nil)
 }
 
 // NewRGBATexture ...
@@ -58,29 +54,26 @@ func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *Texture, er
 
 	texture.BindTexture(0)
 	if linear {
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MIN_FILTER, Gl.LINEAR)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.LINEAR)
 	} else {
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MIN_FILTER, Gl.NEAREST)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.NEAREST)
 	}
 	if repeat {
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.REPEAT)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.REPEAT)
 	} else {
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.CLAMP_TO_EDGE)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.CLAMP_TO_EDGE)
 	}
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
+	Gl.TexImage2D(
+		Gl.TEXTURE_2D,
 		0,
-		gl.RGBA,
-		int32(rgba.Rect.Size().X),
-		int32(rgba.Rect.Size().Y),
-		0,
-		gl.RGBA,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(rgba.Pix))
+		Gl.RGBA,
+		Gl.RGBA,
+		Gl.UNSIGNED_BYTE,
+		rgba)
 	texture.UnbindTexture(0)
 
 	return texture, nil

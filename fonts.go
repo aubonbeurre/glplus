@@ -9,7 +9,6 @@ import (
 	"path"
 	"runtime"
 
-	gl "github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
@@ -208,12 +207,12 @@ func (f *Font) DeleteFont() {
 }
 
 // BindTexture ...
-func (f *Font) BindTexture(unit uint32) {
+func (f *Font) BindTexture(unit int) {
 	f.texture.BindTexture(unit)
 }
 
 // UnbindTexture ...
-func (f *Font) UnbindTexture(unit uint32) {
+func (f *Font) UnbindTexture(unit int) {
 	f.texture.UnbindTexture(unit)
 }
 
@@ -308,20 +307,17 @@ func NewFont(fontName string) (font *Font, err error) {
 	var texture = GenTexture(gray.Rect.Size())
 
 	texture.BindTexture(0)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
+	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MIN_FILTER, Gl.LINEAR)
+	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.LINEAR)
+	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.CLAMP_TO_EDGE)
+	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.CLAMP_TO_EDGE)
+	Gl.TexImage2D(
+		Gl.TEXTURE_2D,
 		0,
-		gl.R8,
-		int32(gray.Rect.Size().X),
-		int32(gray.Rect.Size().Y),
-		0,
-		gl.RED,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(gray.Pix))
+		Gl.R8,
+		Gl.RED,
+		Gl.UNSIGNED_BYTE,
+		gray)
 
 	font = &Font{
 		texture:   texture,

@@ -1,11 +1,38 @@
 package glplus
 
 import (
+	"fmt"
+	"image"
 	"log"
 	"reflect"
+	"unsafe"
 
 	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
+
+// ENGOGLTexture one day my become gl. from "engo.io/gl"
+type ENGOGLTexture struct{ uint32 }
+
+// ENGOGLBuffer ...
+type ENGOGLBuffer struct{ uint32 }
+
+// ENGOGLFrameBuffer ...
+type ENGOGLFrameBuffer struct{ uint32 }
+
+// ENGOGLRenderBuffer ...
+type ENGOGLRenderBuffer struct{ uint32 }
+
+// ENGOGLProgram ...
+type ENGOGLProgram struct{ uint32 }
+
+// ENGOGLUniformLocation ...
+type ENGOGLUniformLocation struct{ int32 }
+
+// ENGOGLShader ...
+type ENGOGLShader struct{ uint32 }
+
+// ENGOGLVertexArray ...
+type ENGOGLVertexArray struct{ uint32 }
 
 type Context struct {
 	ARRAY_BUFFER                                 int
@@ -89,6 +116,8 @@ type Context struct {
 	FRAMEBUFFER_INCOMPLETE_ATTACHMENT            int
 	FRAMEBUFFER_INCOMPLETE_DIMENSIONS            int
 	FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT    int
+	FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER           int
+	FRAMEBUFFER_INCOMPLETE_READ_BUFFER           int
 	FRAMEBUFFER_UNSUPPORTED                      int
 	FRONT                                        int
 	FRONT_AND_BACK                               int
@@ -302,6 +331,8 @@ type Context struct {
 	VIEWPORT                                     int
 	ZERO                                         int
 	TRUE                                         int
+	R8                                           int
+	RED                                          int
 }
 
 // NewContext ...
@@ -387,6 +418,8 @@ func NewContext() *Context {
 		FRAMEBUFFER_COMPLETE:                         gl.FRAMEBUFFER_COMPLETE,
 		FRAMEBUFFER_INCOMPLETE_ATTACHMENT:            gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
 		FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:    gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
+		FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:           gl.FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER,
+		FRAMEBUFFER_INCOMPLETE_READ_BUFFER:           gl.FRAMEBUFFER_INCOMPLETE_READ_BUFFER,
 		FRAMEBUFFER_UNSUPPORTED:                      gl.FRAMEBUFFER_UNSUPPORTED,
 		FRONT:                         gl.FRONT,
 		FRONT_AND_BACK:                gl.FRONT_AND_BACK,
@@ -591,35 +624,13 @@ func NewContext() *Context {
 		VIEWPORT:                           gl.VIEWPORT,
 		ZERO:                               gl.ZERO,
 		TRUE:                               gl.TRUE,
+		R8:                                 gl.R8,
+		RED:                                gl.RED,
 	}
 }
 
 // Gl may become engo.Gl (Gl = glplus.NewContext())
 var Gl *Context
-
-// ENGOGLTexture one day my become gl. from "engo.io/gl"
-type ENGOGLTexture struct{ uint32 }
-
-// ENGOGLBuffer ...
-type ENGOGLBuffer struct{ uint32 }
-
-// ENGOGLFrameBuffer ...
-type ENGOGLFrameBuffer struct{ uint32 }
-
-// ENGOGLRenderBuffer ...
-type ENGOGLRenderBuffer struct{ uint32 }
-
-// ENGOGLProgram ...
-type ENGOGLProgram struct{ uint32 }
-
-// ENGOGLUniformLocation ...
-type ENGOGLUniformLocation struct{ int32 }
-
-// ENGOGLShader ...
-type ENGOGLShader struct{ uint32 }
-
-// ENGOGLVertexArray ...
-type ENGOGLVertexArray struct{ uint32 }
 
 func (c *Context) DeleteProgram(program *ENGOGLProgram) {
 	gl.DeleteProgram(program.uint32)
@@ -842,4 +853,126 @@ func (c *Context) ClearColor(r, g, b, a float32) {
 
 func (c *Context) Viewport(x, y, width, height int) {
 	gl.Viewport(int32(x), int32(y), int32(width), int32(height))
+}
+
+func (c *Context) CreateTexture() *ENGOGLTexture {
+	var loc uint32
+	gl.GenTextures(1, &loc)
+	return &ENGOGLTexture{loc}
+}
+
+func (c *Context) BindTexture(target int, texture *ENGOGLTexture) {
+	if texture == nil {
+		gl.BindTexture(uint32(target), 0)
+		return
+	}
+	gl.BindTexture(uint32(target), texture.uint32)
+}
+
+func (c *Context) ActiveTexture(texture int) {
+	gl.ActiveTexture(uint32(texture))
+}
+
+func (c *Context) TexParameteri(target int, pname int, param int) {
+	gl.TexParameteri(uint32(target), uint32(pname), int32(param))
+}
+
+func (c *Context) TexImage2D(target, level, internalFormat, format, kind int, data interface{}) {
+	var pix []uint8
+	width := 0
+	height := 0
+	if data == nil {
+		pix = nil
+	} else {
+
+		switch img := data.(type) {
+		case *image.NRGBA:
+			width = img.Bounds().Dx()
+			height = img.Bounds().Dy()
+			pix = img.Pix
+		case *image.RGBA:
+			width = img.Bounds().Dx()
+			height = img.Bounds().Dy()
+			pix = img.Pix
+		case *image.Gray:
+			width = img.Bounds().Dx()
+			height = img.Bounds().Dy()
+			pix = img.Pix
+		default:
+			panic(fmt.Errorf("Image type unsupported: %T", img))
+		}
+	}
+	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), gl.Ptr(pix))
+}
+
+func (c *Context) TexImage2DEmpty(target, level, internalFormat, width, height, format, kind int) {
+	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), nil)
+}
+
+func (c *Context) DeleteRenderBuffer(vao *ENGOGLRenderBuffer) {
+	gl.DeleteRenderbuffers(1, &[]uint32{vao.uint32}[0])
+}
+
+func (c *Context) CreateRenderBuffer() *ENGOGLRenderBuffer {
+	var loc uint32
+	gl.GenRenderbuffers(1, &loc)
+	return &ENGOGLRenderBuffer{loc}
+}
+
+func (c *Context) BindRenderBuffer(target int, vao *ENGOGLRenderBuffer) {
+	if vao == nil {
+		gl.BindRenderbuffer(uint32(target), 0)
+		return
+	}
+	gl.BindRenderbuffer(uint32(target), vao.uint32)
+}
+
+func (c *Context) DeleteFrameBuffer(vao *ENGOGLFrameBuffer) {
+	gl.DeleteFramebuffers(1, &[]uint32{vao.uint32}[0])
+}
+
+func (c *Context) CreateFrameBuffer() *ENGOGLFrameBuffer {
+	var loc uint32
+	gl.GenFramebuffers(1, &loc)
+	return &ENGOGLFrameBuffer{loc}
+}
+
+func (c *Context) BindFrameBuffer(target int, vao *ENGOGLFrameBuffer) {
+	if vao == nil {
+		gl.BindFramebuffer(uint32(target), 0)
+		return
+	}
+	gl.BindFramebuffer(uint32(target), vao.uint32)
+}
+
+func (c *Context) FramebufferRenderbuffer(target, attachment, renderbuffertarget int, renderbuffer *ENGOGLRenderBuffer) {
+	gl.FramebufferRenderbuffer(uint32(target), uint32(attachment), uint32(renderbuffertarget), renderbuffer.uint32)
+}
+
+func (c *Context) CheckFramebufferStatus(target int) int {
+	return int(gl.CheckFramebufferStatus(uint32(target)))
+}
+
+func (c *Context) RenderbufferStorage(target, internalFormat, width, height int) {
+	gl.RenderbufferStorage(uint32(target), uint32(internalFormat), int32(width), int32(height))
+}
+
+func (c *Context) FramebufferTexture2D(target, attachment, textarget int, texture *ENGOGLTexture, level int) {
+	gl.FramebufferTexture2D(uint32(target), uint32(attachment), uint32(textarget), uint32(texture.uint32), int32(level))
+}
+
+func (c *Context) DrawBuffer(buf int) {
+	gl.DrawBuffer(uint32(buf))
+}
+
+func (c *Context) Flush() {
+	gl.Flush()
+}
+
+func (c *Context) ReadBuffer(src int) {
+	gl.ReadBuffer(uint32(src))
+}
+
+func (c *Context) ReadPixels(x, y, width, height, format, typ int, pixels unsafe.Pointer) {
+	gl.ReadPixels(int32(x), int32(y), int32(width), int32(height), uint32(format), uint32(typ), pixels)
 }

@@ -5,29 +5,27 @@ import (
 	"image"
 	"image/color"
 	"unsafe"
-
-	gl "github.com/go-gl/gl/v4.1-core/gl"
 )
 
 // RenderTarget ...
 type RenderTarget struct {
-	fbuffer  uint32
-	rbuffer  uint32
-	zbuffer  uint32
+	fbuffer  *ENGOGLFrameBuffer
+	rbuffer  *ENGOGLRenderBuffer
+	zbuffer  *ENGOGLRenderBuffer
 	hasDepth bool
 	Tex      *Texture
 }
 
 // Delete ...
 func (r *RenderTarget) Delete() {
-	if r.fbuffer != 0 {
-		gl.DeleteFramebuffers(1, &r.fbuffer)
+	if r.fbuffer != nil {
+		Gl.DeleteFrameBuffer(r.fbuffer)
 	}
-	if r.rbuffer != 0 {
-		gl.DeleteRenderbuffers(1, &r.rbuffer)
+	if r.rbuffer != nil {
+		Gl.DeleteRenderBuffer(r.rbuffer)
 	}
-	if r.zbuffer != 0 {
-		gl.DeleteRenderbuffers(1, &r.zbuffer)
+	if r.zbuffer != nil {
+		Gl.DeleteRenderBuffer(r.zbuffer)
 	}
 	if r.Tex != nil {
 		r.Tex.DeleteTexture()
@@ -42,38 +40,36 @@ func (r *RenderTarget) EnsureSize(size image.Point) {
 		}
 		r.Tex = GenTexture(image.Point{size.X, size.Y})
 		r.Tex.BindTexture(0)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-		gl.TexImage2D(
-			gl.TEXTURE_2D,
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MIN_FILTER, Gl.NEAREST)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.NEAREST)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.CLAMP_TO_EDGE)
+		Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.CLAMP_TO_EDGE)
+		Gl.TexImage2DEmpty(
+			Gl.TEXTURE_2D,
 			0,
-			gl.RGBA,
-			int32(size.X),
-			int32(size.Y),
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			nil)
+			Gl.RGBA,
+			size.X,
+			size.Y,
+			Gl.RGBA,
+			Gl.UNSIGNED_BYTE)
 		r.Tex.UnbindTexture(0)
 	}
 }
 
 func checkFramebufferStatus() string {
-	status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER)
+	status := Gl.CheckFramebufferStatus(Gl.FRAMEBUFFER)
 	switch status {
-	case gl.FRAMEBUFFER_COMPLETE:
+	case Gl.FRAMEBUFFER_COMPLETE:
 		return "OK"
-	case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+	case Gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 		return "Framebuffer incomplete, incomplete attachment!"
-	case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+	case Gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 		return "Framebuffer incomplete, missing attachment!"
-	case gl.FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+	case Gl.FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
 		return "Framebuffer incomplete, missing draw buffer!"
-	case gl.FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+	case Gl.FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
 		return "Framebuffer incomplete, missing read buffer!"
-	case gl.FRAMEBUFFER_UNSUPPORTED:
+	case Gl.FRAMEBUFFER_UNSUPPORTED:
 		return "Unsupported framebuffer format!"
 	}
 	panic(fmt.Errorf("Unknown error %d", status))
@@ -82,38 +78,38 @@ func checkFramebufferStatus() string {
 // Bind ...
 func (r *RenderTarget) Bind(tex *Texture) {
 	// Bind the frame-buffer object and attach to it a render-buffer object set up as a depth-buffer.
-	gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbuffer)
+	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, r.fbuffer)
 
 	if r.hasDepth {
-		gl.BindRenderbuffer(gl.RENDERBUFFER, r.zbuffer)
-		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT, int32(tex.Size.X), int32(tex.Size.Y))
+		Gl.BindRenderBuffer(Gl.RENDERBUFFER, r.zbuffer)
+		Gl.RenderbufferStorage(Gl.RENDERBUFFER, Gl.DEPTH_COMPONENT, tex.Size.X, tex.Size.Y)
 	}
 
-	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex.Handle(), 0)
+	Gl.FramebufferTexture2D(Gl.FRAMEBUFFER, Gl.COLOR_ATTACHMENT0, Gl.TEXTURE_2D, tex.Handle(), 0)
 
 	// Set the render target - primary surface
-	gl.DrawBuffer(gl.COLOR_ATTACHMENT0)
+	Gl.DrawBuffer(Gl.COLOR_ATTACHMENT0)
 
 	status := checkFramebufferStatus()
 	if status != "OK" {
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		Gl.BindFrameBuffer(Gl.FRAMEBUFFER, nil)
 		panic(fmt.Errorf("Canot continue error %s", status))
 	}
 }
 
 // Unbind ...
 func (r *RenderTarget) Unbind(tex *Texture) {
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-	gl.Flush()
+	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, nil)
+	Gl.Flush()
 }
 
 // ReadBuffer ...
 func (r *RenderTarget) ReadBuffer(w, h int) (newImage *image.RGBA) {
-	gl.Flush()
-	gl.ReadBuffer(gl.COLOR_ATTACHMENT0)
+	Gl.Flush()
+	Gl.ReadBuffer(Gl.COLOR_ATTACHMENT0)
 
 	var pix = make([]float32, w*h*4)
-	gl.ReadPixels(0, 0, int32(w), int32(h), gl.RGBA, gl.FLOAT, unsafe.Pointer(&pix[0]))
+	Gl.ReadPixels(0, 0, w, h, Gl.RGBA, Gl.FLOAT, unsafe.Pointer(&pix[0]))
 
 	newImage = image.NewRGBA(image.Rect(0, 0, w, h))
 	for j := 0; j < h; j++ {
@@ -128,29 +124,29 @@ func (r *RenderTarget) ReadBuffer(w, h int) (newImage *image.RGBA) {
 // NewRenderTarget ...
 func NewRenderTarget(hasDepth bool) (r *RenderTarget) {
 	const msaa = 4
-	var rbuffer, zbuffer uint32
+	var rbuffer, zbuffer *ENGOGLRenderBuffer
 	//now create the color render buffer
-	gl.GenRenderbuffers(1, &rbuffer)
-	gl.BindRenderbuffer(gl.RENDERBUFFER, rbuffer)
-	//gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, msaa, GL_RGB8, width, height);
+	rbuffer = Gl.CreateRenderBuffer()
+	Gl.BindRenderBuffer(Gl.RENDERBUFFER, rbuffer)
+	//Gl.RenderbufferStorageMultisample(Gl.RENDERBUFFER, msaa, GL_RGB8, width, height);
 
 	if hasDepth {
-		gl.GenRenderbuffers(1, &zbuffer)
-		gl.BindRenderbuffer(gl.RENDERBUFFER, zbuffer)
-		//gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, msaa, GL_DEPTH_COMPONENT, width, height);
+		zbuffer = Gl.CreateRenderBuffer()
+		Gl.BindRenderBuffer(Gl.RENDERBUFFER, zbuffer)
+		//Gl.RenderbufferStorageMultisample(Gl.RENDERBUFFER, msaa, GL_DEPTH_COMPONENT, width, height);
 	}
 
-	var fbuffer uint32
+	var fbuffer *ENGOGLFrameBuffer
 	//create the color buffer to render to
-	gl.GenFramebuffers(1, &fbuffer)
-	gl.BindFramebuffer(gl.FRAMEBUFFER, fbuffer)
+	fbuffer = Gl.CreateFrameBuffer()
+	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, fbuffer)
 
-	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rbuffer)
+	Gl.FramebufferRenderbuffer(Gl.FRAMEBUFFER, Gl.COLOR_ATTACHMENT0, Gl.RENDERBUFFER, rbuffer)
 	if hasDepth {
-		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, zbuffer)
+		Gl.FramebufferRenderbuffer(Gl.FRAMEBUFFER, Gl.DEPTH_ATTACHMENT, Gl.RENDERBUFFER, zbuffer)
 	}
 
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, nil)
 
 	r = &RenderTarget{
 		fbuffer:  fbuffer,
