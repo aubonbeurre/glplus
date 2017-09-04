@@ -332,6 +332,7 @@ type Context struct {
 	TRUE                                         int
 	R8                                           int
 	RED                                          int
+	R32F                                         int
 }
 
 // NewContext ...
@@ -626,6 +627,7 @@ func NewContext() *Context {
 		TRUE:                               gl.TRUE,
 		R8:                                 gl.R8,
 		RED:                                gl.RED,
+		R32F:                               gl.R32F,
 	}
 }
 
@@ -951,4 +953,8 @@ func (c *Context) ReadBuffer(src int) {
 
 func (c *Context) ReadPixels(x, y, width, height, format, typ int, pixels unsafe.Pointer) {
 	gl.ReadPixels(int32(x), int32(y), int32(width), int32(height), uint32(format), uint32(typ), pixels)
+}
+
+func (c *Context) DrawArrays(mode, first, count int) {
+	gl.DrawArrays(uint32(mode), int32(first), int32(count))
 }
