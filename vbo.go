@@ -71,6 +71,7 @@ func (v *VBO) Load(verts *float32, vsize int, indices *uint32, isize int) {
 	var floatSize = int(unsafe.Sizeof(float32(1.0)))
 	var intSize = int(unsafe.Sizeof(uint32(1)))
 
+	gl.BindVertexArray(v.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, v.vboVerts)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
 
@@ -115,6 +116,7 @@ func NewVBO(isStrip bool) (vbo *VBO) {
 		hasNormals: false,
 		isStrip:    isStrip,
 	}
+	gl.BindVertexArray(0)
 	return vbo
 }
 
