@@ -15,10 +15,6 @@ func TestLayout(t *testing.T) {
 	// We'll want to explicitly set our root item to be that size.
 	ctx.lay_set_size_xy(root, 1280, 720)
 
-	// Let's pretend we have a window in our game or OS of some known dimension.
-	// We'll want to explicitly set our root item to be that size.
-	ctx.lay_set_size_xy(root, 1280, 720)
-
 	// Set our root item to arrange its children in a row, left-to-right, in the
 	// order they are inserted.
 	ctx.lay_set_contain(root, LAY_ROW)
