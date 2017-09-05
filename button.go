@@ -6,6 +6,8 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// TODO: https://github.com/memononen/nanovg
+
 var (
 	// https://thebookofshaders.com/07/
 	testFontShader = `
