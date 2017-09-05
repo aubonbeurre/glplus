@@ -7,25 +7,25 @@ import (
 	"math"
 )
 
-type lay_id uint32
-type lay_scalar int16
+type Lay_id uint32
+type Lay_scalar int16
 
-const LAY_INVALID_ID lay_id = math.MaxUint32
+const LAY_INVALID_ID Lay_id = math.MaxUint32
 
-type lay_vec4 [4]lay_scalar
-type lay_vec2 [2]lay_scalar
+type Lay_vec4 [4]Lay_scalar
+type Lay_vec2 [2]Lay_scalar
 
-type lay_item_t struct {
+type Lay_item_t struct {
 	flags        int32
-	first_child  lay_id
-	next_sibling lay_id
-	margins      lay_vec4
-	size         lay_vec2
+	first_child  Lay_id
+	next_sibling Lay_id
+	margins      Lay_vec4
+	size         Lay_vec2
 }
 
-type lay_context struct {
-	items []*lay_item_t
-	rects []lay_vec4
+type Lay_context struct {
+	items []*Lay_item_t
+	rects []Lay_vec4
 }
 
 // Container flags to pass to lay_set_container()
@@ -150,8 +150,8 @@ const (
 	LAY_ITEM_COMPARE_MASK = LAY_ITEM_BOX_MODEL_MASK | (LAY_ITEM_LAYOUT_MASK & ^LAY_BREAK) | LAY_USERMASK
 )
 
-func lay_vec4_xyzw(x, y, z, w lay_scalar) lay_vec4 {
-	return lay_vec4{x, y, z, w}
+func Lay_vec4_xyzw(x, y, z, w Lay_scalar) Lay_vec4 {
+	return Lay_vec4{x, y, z, w}
 }
 
 func LAY_ASSERT(cond bool) {
@@ -163,22 +163,22 @@ func LAY_ASSERT(cond bool) {
 // Get the pointer to an item in the buffer by its id. Don't keep this around --
 // it will become invalid as soon as any reallocation occurs. Just store the id
 // instead (it's smaller, anyway, and the lookup cost will be nothing.)
-func (ctx *lay_context) lay_get_item(id lay_id) *lay_item_t {
-	LAY_ASSERT(id != LAY_INVALID_ID && id < lay_id(len(ctx.items)))
+func (ctx *Lay_context) Lay_get_item(id Lay_id) *Lay_item_t {
+	LAY_ASSERT(id != LAY_INVALID_ID && id < Lay_id(len(ctx.items)))
 	return ctx.items[id]
 }
 
 // Get the id of first child of an item, if any. Returns LAY_INVALID_ID if there
 // is no child.
-func (ctx *lay_context) lay_first_child(id lay_id) lay_id {
-	pitem := ctx.lay_get_item(id)
+func (ctx *Lay_context) Lay_first_child(id Lay_id) Lay_id {
+	pitem := ctx.Lay_get_item(id)
 	return pitem.first_child
 }
 
 // Get the id of the next sibling of an item, if any. Returns LAY_INVALID_ID if
 // there is no next sibling.
-func (ctx *lay_context) lay_next_sibling(id lay_id) lay_id {
-	pitem := ctx.lay_get_item(id)
+func (ctx *Lay_context) Lay_next_sibling(id Lay_id) Lay_id {
+	pitem := ctx.Lay_get_item(id)
 	return pitem.next_sibling
 }
 
@@ -187,15 +187,15 @@ func (ctx *lay_context) lay_next_sibling(id lay_id) lay_id {
 // result will be undefined. The vector components are:
 // 0: x starting position, 1: y starting position
 // 2: width, 3: height
-func (ctx *lay_context) lay_get_rect(id lay_id) lay_vec4 {
-	LAY_ASSERT(id != LAY_INVALID_ID && id < lay_id(len(ctx.items)))
+func (ctx *Lay_context) Lay_get_rect(id Lay_id) Lay_vec4 {
+	LAY_ASSERT(id != LAY_INVALID_ID && id < Lay_id(len(ctx.items)))
 	return ctx.rects[id]
 }
 
 // The same as lay_get_rect, but writes the x,y positions and width,height
-// values to the specified addresses instead of returning them in a lay_vec4.
-func (ctx *lay_context) lay_get_rect_xywh(id lay_id) lay_vec4 {
-	LAY_ASSERT(id != LAY_INVALID_ID && id < lay_id(len(ctx.items)))
+// values to the specified addresses instead of returning them in a Lay_vec4.
+func (ctx *Lay_context) Lay_get_rect_xywh(id Lay_id) Lay_vec4 {
+	LAY_ASSERT(id != LAY_INVALID_ID && id < Lay_id(len(ctx.items)))
 	return ctx.rects[id]
 }
 
@@ -228,11 +228,11 @@ func (ctx *lay_context) lay_get_rect_xywh(id lay_id) lay_vec4 {
 // Otherwise, the memset from string.h will be used.
 
 // Useful math utilities
-func lay_scalar_max(x, y lay_scalar) lay_scalar {
-	return lay_scalar(math.Max(float64(x), float64(y)))
+func lay_scalar_max(x, y Lay_scalar) Lay_scalar {
+	return Lay_scalar(math.Max(float64(x), float64(y)))
 }
-func lay_scalar_min(x, y lay_scalar) lay_scalar {
-	return lay_scalar(math.Min(float64(x), float64(y)))
+func lay_scalar_min(x, y Lay_scalar) Lay_scalar {
+	return Lay_scalar(math.Min(float64(x), float64(y)))
 }
 func lay_float_max(a, b float32) float32 {
 	return float32(math.Max(float64(a), float64(b)))
@@ -253,11 +253,11 @@ func lay_float_min(a, b float32) float32 {
 // However, it's safe to use lay_set_size on an item, and then re-run
 // lay_run_context. This might be useful if you are doing a resizing animation
 // on items in a layout without any contents changing.
-func (ctx *lay_context) lay_run_context() {
+func (ctx *Lay_context) Lay_run_context() {
 	LAY_ASSERT(ctx != nil)
 
 	if ctx.items != nil {
-		ctx.lay_run_item(0)
+		ctx.Lay_run_item(0)
 	}
 }
 
@@ -270,7 +270,7 @@ func (ctx *lay_context) lay_run_context() {
 // it's easy to generated bad output if the parent items haven't yet had their
 // output rectangles calculated, or if they've been invalidated (e.g. due to
 // re-allocation).
-func (ctx *lay_context) lay_run_item(item lay_id) {
+func (ctx *Lay_context) Lay_run_item(item Lay_id) {
 	LAY_ASSERT(ctx != nil)
 
 	ctx.lay_calc_size(item, 0)
@@ -301,49 +301,49 @@ func (ctx *lay_context) lay_run_item(item lay_id) {
 // If you clear your context every time you calculate your layout, or if you
 // don't use wrapping, you don't need to call this.
 
-func (ctx *lay_context) lay_clear_item_break(item lay_id) {
+func (ctx *Lay_context) Lay_clear_item_break(item Lay_id) {
 	LAY_ASSERT(ctx != nil)
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 	pitem.flags = pitem.flags & ^LAY_BREAK
 }
 
 // Returns the number of items that have been created in a context.
-func (ctx *lay_context) lay_items_count() lay_id {
+func (ctx *Lay_context) Lay_items_count() Lay_id {
 	LAY_ASSERT(ctx != nil)
-	return lay_id(len(ctx.items))
+	return Lay_id(len(ctx.items))
 }
 
 // Returns the number of items the context can hold without performing a
 // reallocation.
-func (ctx *lay_context) lay_items_capacity() lay_id {
+func (ctx *Lay_context) Lay_items_capacity() Lay_id {
 	LAY_ASSERT(ctx != nil)
-	return lay_id(cap(ctx.items))
+	return Lay_id(cap(ctx.items))
 }
 
 // Create a new item, which can just be thought of as a rectangle. Returns the
 // id (handle) used to identify the item.
-func (ctx *lay_context) lay_item() lay_id {
-	ctx.items = append(ctx.items, &lay_item_t{
+func (ctx *Lay_context) Lay_item() Lay_id {
+	ctx.items = append(ctx.items, &Lay_item_t{
 		first_child:  LAY_INVALID_ID,
 		next_sibling: LAY_INVALID_ID,
 	})
-	ctx.rects = append(ctx.rects, lay_vec4{})
-	return lay_id(len(ctx.items) - 1)
+	ctx.rects = append(ctx.rects, Lay_vec4{})
+	return Lay_id(len(ctx.items) - 1)
 }
 
-func lay_append_by_ptr(pearlier *lay_item_t, later lay_id, plater *lay_item_t) {
+func lay_append_by_ptr(pearlier *Lay_item_t, later Lay_id, plater *Lay_item_t) {
 	plater.next_sibling = pearlier.next_sibling
 	plater.flags |= LAY_ITEM_INSERTED
 	pearlier.next_sibling = later
 }
 
-func (ctx *lay_context) lay_last_child(parent lay_id) lay_id {
-	pparent := ctx.lay_get_item(parent)
+func (ctx *Lay_context) Lay_last_child(parent Lay_id) Lay_id {
+	pparent := ctx.Lay_get_item(parent)
 	child := pparent.first_child
 	if child == LAY_INVALID_ID {
 		return LAY_INVALID_ID
 	}
-	pchild := ctx.lay_get_item(child)
+	pchild := ctx.Lay_get_item(child)
 	result := child
 	for true {
 		next := pchild.next_sibling
@@ -351,7 +351,7 @@ func (ctx *lay_context) lay_last_child(parent lay_id) lay_id {
 			break
 		}
 		result = next
-		pchild = ctx.lay_get_item(next)
+		pchild = ctx.Lay_get_item(next)
 	}
 	return result
 }
@@ -363,22 +363,22 @@ func (ctx *lay_context) lay_last_child(parent lay_id) lay_id {
 // it does not need to traverse the parent's children each time. So if you're
 // creating a long list of children inside of a parent, you might prefer to use
 // this after using lay_insert to insert the first child.
-func (ctx *lay_context) lay_append(earlier lay_id, later lay_id) {
+func (ctx *Lay_context) Lay_append(earlier Lay_id, later Lay_id) {
 	LAY_ASSERT(later != 0)       // Must not be root item
 	LAY_ASSERT(earlier != later) // Must not be same item id
-	pearlier := ctx.lay_get_item(earlier)
-	plater := ctx.lay_get_item(later)
+	pearlier := ctx.Lay_get_item(earlier)
+	plater := ctx.Lay_get_item(later)
 	lay_append_by_ptr(pearlier, later, plater)
 }
 
 // Inserts an item into another item, forming a parent - child relationship. An
 // item can contain any number of child items. Items inserted into a parent are
 // put at the end of the ordering, after any existing siblings.
-func (ctx *lay_context) lay_insert(parent lay_id, child lay_id) {
+func (ctx *Lay_context) Lay_insert(parent Lay_id, child Lay_id) {
 	LAY_ASSERT(child != 0)      // Must not be root item
 	LAY_ASSERT(parent != child) // Must not be same item id
-	pparent := ctx.lay_get_item(parent)
-	pchild := ctx.lay_get_item(child)
+	pparent := ctx.Lay_get_item(parent)
+	pchild := ctx.Lay_get_item(child)
 	LAY_ASSERT((pchild.flags & LAY_ITEM_INSERTED) == 0)
 	// Parent has no existing children, make inserted item the first child.
 	if pparent.first_child == LAY_INVALID_ID {
@@ -388,13 +388,13 @@ func (ctx *lay_context) lay_insert(parent lay_id, child lay_id) {
 		// inserted item after it.
 	} else {
 		next := pparent.first_child
-		pnext := ctx.lay_get_item(next)
+		pnext := ctx.Lay_get_item(next)
 		for true {
 			next = pnext.next_sibling
 			if next == LAY_INVALID_ID {
 				break
 			}
-			pnext = ctx.lay_get_item(next)
+			pnext = ctx.Lay_get_item(next)
 		}
 		lay_append_by_ptr(pnext, child, pchild)
 	}
@@ -402,12 +402,12 @@ func (ctx *lay_context) lay_insert(parent lay_id, child lay_id) {
 
 // Like lay_insert, but puts the new item as the first child in a parent instead
 // of as the last.
-func (ctx *lay_context) lay_push(parent lay_id, new_child lay_id) {
+func (ctx *Lay_context) Lay_push(parent Lay_id, new_child Lay_id) {
 	LAY_ASSERT(new_child != 0)      // Must not be root item
 	LAY_ASSERT(parent != new_child) // Must not be same item id
-	pparent := ctx.lay_get_item(parent)
+	pparent := ctx.Lay_get_item(parent)
 	old_child := pparent.first_child
-	pchild := ctx.lay_get_item(new_child)
+	pchild := ctx.Lay_get_item(new_child)
 	LAY_ASSERT((pchild.flags & LAY_ITEM_INSERTED) == 0)
 	pparent.first_child = new_child
 	pchild.flags |= LAY_ITEM_INSERTED
@@ -416,21 +416,21 @@ func (ctx *lay_context) lay_push(parent lay_id, new_child lay_id) {
 
 // Gets the size that was set with lay_set_size or lay_set_size_xy. The _xy
 // version writes the output values to the specified addresses instead of
-// returning the values in a lay_vec2.
-func (ctx *lay_context) lay_get_size(item lay_id) lay_vec2 {
-	pitem := ctx.lay_get_item(item)
+// returning the values in a Lay_vec2.
+func (ctx *Lay_context) Lay_get_size(item Lay_id) Lay_vec2 {
+	pitem := ctx.Lay_get_item(item)
 	return pitem.size
 }
 
-func (ctx *lay_context) lay_get_size_xy(item lay_id) lay_vec2 {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_get_size_xy(item Lay_id) Lay_vec2 {
+	pitem := ctx.Lay_get_item(item)
 	return pitem.size
 }
 
 // Sets the size of an item. The _xy version passes the width and height as
 // separate arguments, but functions the same.
-func (ctx *lay_context) lay_set_size(item lay_id, size lay_vec2) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_set_size(item Lay_id, size Lay_vec2) {
+	pitem := ctx.Lay_get_item(item)
 	pitem.size = size
 	flags := pitem.flags
 	if size[0] == 0 {
@@ -446,8 +446,8 @@ func (ctx *lay_context) lay_set_size(item lay_id, size lay_vec2) {
 	pitem.flags = flags
 }
 
-func (ctx *lay_context) lay_set_size_xy(item lay_id, width, height lay_scalar) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_set_size_xy(item Lay_id, width, height Lay_scalar) {
+	pitem := ctx.Lay_get_item(item)
 	pitem.size[0] = width
 	pitem.size[1] = height
 	// Kinda redundant, whatever
@@ -468,36 +468,36 @@ func (ctx *lay_context) lay_set_size_xy(item lay_id, width, height lay_scalar) {
 // Set the flags on an item which determines how it behaves as a child inside of
 // a parent item. For example, setting LAY_VFILL will make an item try to fill
 // up all available vertical space inside of its parent.
-func (ctx *lay_context) lay_set_behave(item lay_id, flags int32) {
+func (ctx *Lay_context) Lay_set_behave(item Lay_id, flags int32) {
 	LAY_ASSERT((flags & LAY_ITEM_LAYOUT_MASK) == flags)
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 	pitem.flags = (pitem.flags & ^LAY_ITEM_LAYOUT_MASK) | flags
 }
 
 // Set the flags on an item which determines how it behaves as a parent. For
 // example, setting LAY_COLUMN will make an item behave as if it were a column
 // -- it will lay out its children vertically.
-func (ctx *lay_context) lay_set_contain(item lay_id, flags int32) {
+func (ctx *Lay_context) Lay_set_contain(item Lay_id, flags int32) {
 	LAY_ASSERT((flags & LAY_ITEM_BOX_MASK) == flags)
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 	pitem.flags = (pitem.flags & ^LAY_ITEM_BOX_MASK) | flags
 }
 
 // Set the margins on an item. The components of the vector are:
 // 0: left, 1: top, 2: right, 3: bottom.
-func (ctx *lay_context) lay_set_margins(item lay_id, ltrb lay_vec4) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_set_margins(item Lay_id, ltrb Lay_vec4) {
+	pitem := ctx.Lay_get_item(item)
 	pitem.margins = ltrb
 }
 
 // Same as lay_set_margins, but the components are passed as separate arguments
 // (left, top, right, bottom).
-func (ctx *lay_context) lay_set_margins_ltrb(item lay_id, l, t, r, b lay_scalar) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_set_margins_ltrb(item Lay_id, l, t, r, b Lay_scalar) {
+	pitem := ctx.Lay_get_item(item)
 	// Alternative, uses stack and addressed writes
 	//pitem.margins = lay_vec4_xyzw(l, t, r, b)
 	// Alternative, uses rax and left-shift
-	//pitem.margins = (lay_vec4){l, t, r, b}
+	//pitem.margins = (Lay_vec4){l, t, r, b}
 	// Fewest instructions, but uses more addressed writes?
 	pitem.margins[0] = l
 	pitem.margins[1] = t
@@ -507,25 +507,25 @@ func (ctx *lay_context) lay_set_margins_ltrb(item lay_id, l, t, r, b lay_scalar)
 
 // Get the margins that were set by lay_set_margins. The _ltrb version writes
 // the output values to the specified addresses instead of returning the values
-// in a lay_vec4.
+// in a Lay_vec4.
 // l: left, t: top, r: right, b: bottom
-func (ctx *lay_context) lay_get_margins(item lay_id) lay_vec4 {
-	return ctx.lay_get_item(item).margins
+func (ctx *Lay_context) Lay_get_margins(item Lay_id) Lay_vec4 {
+	return ctx.Lay_get_item(item).margins
 }
 
-func (ctx *lay_context) lay_get_margins_ltrb(item lay_id) lay_vec4 {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) Lay_get_margins_ltrb(item Lay_id) Lay_vec4 {
+	pitem := ctx.Lay_get_item(item)
 	return pitem.margins
 }
 
 // TODO restrict item ptrs correctly
-func (ctx *lay_context) lay_calc_overlayed_size(item lay_id, dim int) lay_scalar {
+func (ctx *Lay_context) lay_calc_overlayed_size(item Lay_id, dim int) Lay_scalar {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
-	var need_size lay_scalar
+	pitem := ctx.Lay_get_item(item)
+	var need_size Lay_scalar
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		rect := ctx.rects[child]
 		// width = start margin + calculated width + end margin
 		child_size := rect[dim] + rect[2+dim] + pchild.margins[wdim]
@@ -535,13 +535,13 @@ func (ctx *lay_context) lay_calc_overlayed_size(item lay_id, dim int) lay_scalar
 	return need_size
 }
 
-func (ctx *lay_context) lay_calc_stacked_size(item lay_id, dim int) lay_scalar {
+func (ctx *Lay_context) lay_calc_stacked_size(item Lay_id, dim int) Lay_scalar {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
-	var need_size lay_scalar
+	pitem := ctx.Lay_get_item(item)
+	var need_size Lay_scalar
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		rect := ctx.rects[child]
 		need_size += rect[dim] + rect[2+dim] + pchild.margins[wdim]
 		child = pchild.next_sibling
@@ -549,14 +549,14 @@ func (ctx *lay_context) lay_calc_stacked_size(item lay_id, dim int) lay_scalar {
 	return need_size
 }
 
-func (ctx *lay_context) lay_calc_wrapped_overlayed_size(item lay_id, dim int) lay_scalar {
+func (ctx *Lay_context) lay_calc_wrapped_overlayed_size(item Lay_id, dim int) Lay_scalar {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
-	var need_size lay_scalar
-	var need_size2 lay_scalar
+	pitem := ctx.Lay_get_item(item)
+	var need_size Lay_scalar
+	var need_size2 Lay_scalar
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		rect := ctx.rects[child]
 		if (pchild.flags & LAY_BREAK) != 0 {
 			need_size2 += need_size
@@ -570,14 +570,14 @@ func (ctx *lay_context) lay_calc_wrapped_overlayed_size(item lay_id, dim int) la
 }
 
 // Equivalent to uiComputeWrappedStackedSize
-func (ctx *lay_context) lay_calc_wrapped_stacked_size(item lay_id, dim int) lay_scalar {
+func (ctx *Lay_context) lay_calc_wrapped_stacked_size(item Lay_id, dim int) Lay_scalar {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
-	var need_size lay_scalar
-	var need_size2 lay_scalar
+	pitem := ctx.Lay_get_item(item)
+	var need_size Lay_scalar
+	var need_size2 Lay_scalar
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		rect := ctx.rects[child]
 		if (pchild.flags & LAY_BREAK) != 0 {
 			need_size2 = lay_scalar_max(need_size2, need_size)
@@ -589,15 +589,15 @@ func (ctx *lay_context) lay_calc_wrapped_stacked_size(item lay_id, dim int) lay_
 	return lay_scalar_max(need_size2, need_size)
 }
 
-func (ctx *lay_context) lay_calc_size(item lay_id, dim int) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) lay_calc_size(item Lay_id, dim int) {
+	pitem := ctx.Lay_get_item(item)
 
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
 		// NOTE: this is recursive and will run out of stack space if items are
 		// nested too deeply.
 		ctx.lay_calc_size(child, dim)
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		child = pchild.next_sibling
 	}
 
@@ -613,7 +613,7 @@ func (ctx *lay_context) lay_calc_size(item lay_id, dim int) {
 
 	// Calculate our size based on children items. Note that we've already
 	// called lay_calc_size on our children at this point.
-	var cal_size lay_scalar
+	var cal_size Lay_scalar
 	switch pitem.flags & LAY_ITEM_BOX_MODEL_MASK {
 	case LAY_COLUMN | LAY_WRAP:
 		// flex model
@@ -651,9 +651,9 @@ func (ctx *lay_context) lay_calc_size(item lay_id, dim int) {
 	ctx.rects[item][2+dim] = cal_size
 }
 
-func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
+func (ctx *Lay_context) lay_arrange_stacked(item Lay_id, dim int, wrap bool) {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 
 	item_flags := pitem.flags
 	rect := ctx.rects[item]
@@ -663,7 +663,7 @@ func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
 
 	start_child := pitem.first_child
 	for start_child != LAY_INVALID_ID {
-		var used lay_scalar
+		var used Lay_scalar
 		var count int          // count of fillers
 		var squeezed_count int // count of squeezable elements
 		var total int
@@ -673,7 +673,7 @@ func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
 		child := start_child
 		end_child := LAY_INVALID_ID
 		for child != LAY_INVALID_ID {
-			pchild := ctx.lay_get_item(child)
+			pchild := ctx.Lay_get_item(child)
 			child_flags := pchild.flags
 			flags := (child_flags & LAY_ITEM_LAYOUT_MASK) >> uint(dim)
 			fflags := (child_flags & LAY_ITEM_FIXED_MASK) >> uint(dim)
@@ -752,8 +752,8 @@ func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
 		// second pass: distribute and rescale
 		child = start_child
 		for child != end_child {
-			var ix0, ix1 lay_scalar
-			pchild := ctx.lay_get_item(child)
+			var ix0, ix1 Lay_scalar
+			pchild := ctx.Lay_get_item(child)
 			child_flags := pchild.flags
 			flags := (child_flags & LAY_ITEM_LAYOUT_MASK) >> uint(dim)
 			fflags := (child_flags & LAY_ITEM_FIXED_MASK) >> uint(dim)
@@ -768,11 +768,11 @@ func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
 			} else { // squeeze
 				x1 = x + lay_float_max(0.0, float32(child_rect[2+dim])+eater)
 			}
-			ix0 = lay_scalar(x)
+			ix0 = Lay_scalar(x)
 			if wrap {
-				ix1 = lay_scalar(lay_float_min(max_x2-float32(child_margins[wdim]), x1))
+				ix1 = Lay_scalar(lay_float_min(max_x2-float32(child_margins[wdim]), x1))
 			} else {
-				ix1 = lay_scalar(x1)
+				ix1 = Lay_scalar(x1)
 			}
 			child_rect[dim] = ix0         // pos
 			child_rect[dim+2] = ix1 - ix0 // size
@@ -786,16 +786,16 @@ func (ctx *lay_context) lay_arrange_stacked(item lay_id, dim int, wrap bool) {
 	}
 }
 
-func (ctx *lay_context) lay_arrange_overlay(item lay_id, dim int) {
+func (ctx *Lay_context) lay_arrange_overlay(item Lay_id, dim int) {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 	rect := ctx.rects[item]
 	offset := rect[dim]
 	space := rect[2+dim]
 
 	child := pitem.first_child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		b_flags := (pchild.flags & LAY_ITEM_LAYOUT_MASK) >> uint(dim)
 		child_margins := pchild.margins
 		child_rect := ctx.rects[child]
@@ -820,13 +820,13 @@ func (ctx *lay_context) lay_arrange_overlay(item lay_id, dim int) {
 	}
 }
 
-func (ctx *lay_context) lay_arrange_overlay_squeezed_range(dim int,
-	start_item, end_item lay_id,
-	offset, space lay_scalar) {
+func (ctx *Lay_context) lay_arrange_overlay_squeezed_range(dim int,
+	start_item, end_item Lay_id,
+	offset, space Lay_scalar) {
 	wdim := dim + 2
 	item := start_item
 	for item != end_item {
-		pitem := ctx.lay_get_item(item)
+		pitem := ctx.Lay_get_item(item)
 		b_flags := (pitem.flags & LAY_ITEM_LAYOUT_MASK) >> uint(dim)
 		margins := pitem.margins
 		rect := ctx.rects[item]
@@ -853,15 +853,15 @@ func (ctx *lay_context) lay_arrange_overlay_squeezed_range(dim int,
 	}
 }
 
-func (ctx *lay_context) lay_arrange_wrapped_overlay_squeezed(item lay_id, dim int) lay_scalar {
+func (ctx *Lay_context) lay_arrange_wrapped_overlay_squeezed(item Lay_id, dim int) Lay_scalar {
 	wdim := dim + 2
-	pitem := ctx.lay_get_item(item)
+	pitem := ctx.Lay_get_item(item)
 	offset := ctx.rects[item][dim]
-	need_size := lay_scalar(0)
+	need_size := Lay_scalar(0)
 	child := pitem.first_child
 	start_child := child
 	for child != LAY_INVALID_ID {
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		if (pchild.flags & LAY_BREAK) != 0 {
 			ctx.lay_arrange_overlay_squeezed_range(dim, start_child, child, offset, need_size)
 			offset += need_size
@@ -878,8 +878,8 @@ func (ctx *lay_context) lay_arrange_wrapped_overlay_squeezed(item lay_id, dim in
 	return offset
 }
 
-func (ctx *lay_context) lay_arrange(item lay_id, dim int) {
-	pitem := ctx.lay_get_item(item)
+func (ctx *Lay_context) lay_arrange(item Lay_id, dim int) {
+	pitem := ctx.Lay_get_item(item)
 
 	flags := pitem.flags
 	switch flags & LAY_ITEM_BOX_MODEL_MASK {
@@ -918,7 +918,7 @@ func (ctx *lay_context) lay_arrange(item lay_id, dim int) {
 		// NOTE: this is recursive and will run out of stack space if items are
 		// nested too deeply.
 		ctx.lay_arrange(child, dim)
-		pchild := ctx.lay_get_item(child)
+		pchild := ctx.Lay_get_item(child)
 		child = pchild.next_sibling
 	}
 }
