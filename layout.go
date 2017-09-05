@@ -631,8 +631,7 @@ func (ctx *Lay_context) lay_calc_size(item Lay_id, dim int) {
 			cal_size = ctx.lay_calc_wrapped_overlayed_size(item, 1)
 		}
 		break
-	case LAY_COLUMN:
-	case LAY_ROW:
+	case LAY_COLUMN, LAY_ROW:
 		// flex model
 		if (pitem.flags & 1) == int32(dim) { // direction
 			cal_size = ctx.lay_calc_stacked_size(item, dim)
@@ -898,8 +897,7 @@ func (ctx *Lay_context) lay_arrange(item Lay_id, dim int) {
 			ctx.lay_arrange_wrapped_overlay_squeezed(item, 1)
 		}
 		break
-	case LAY_COLUMN:
-	case LAY_ROW:
+	case LAY_ROW, LAY_COLUMN:
 		if (flags & 1) == int32(dim) {
 			ctx.lay_arrange_stacked(item, dim, false)
 		} else {
