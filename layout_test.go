@@ -62,3 +62,45 @@ func TestLayout(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func LTEST_TRUE(t *testing.T, cond bool) {
+	if !cond {
+		t.Fail()
+	}
+}
+
+func TestSimpleFill(t *testing.T) {
+	ctx := Lay_context{}
+	root := ctx.Lay_item()
+	child := ctx.Lay_item()
+
+	ctx.Lay_set_size_xy(root, 30, 40)
+	ctx.Lay_set_behave(child, LAY_FILL)
+	ctx.Lay_insert(root, child)
+
+	ctx.Lay_run_context()
+
+	root_r := ctx.Lay_get_rect(root)
+	child_r := ctx.Lay_get_rect(child)
+
+	LTEST_TRUE(t, root_r[0] == 0 && root_r[1] == 0)
+	LTEST_TRUE(t, root_r[2] == 30 && root_r[3] == 40)
+
+	LTEST_TRUE(t, child_r[0] == 0 && child_r[1] == 0)
+	LTEST_TRUE(t, child_r[2] == 30 && child_r[3] == 40)
+
+	// Test to make sure size is ok
+	root_size := ctx.Lay_get_size(root)
+	// Make sure _xy version gives the same values
+	root_size_cs := ctx.Lay_get_size_xy(root)
+	LTEST_TRUE(t, root_size[0] == 30 && root_size[1] == 40)
+	LTEST_TRUE(t, root_size[0] == root_size_cs[0] && root_size[1] == root_size_cs[1])
+
+	// Test to make sure the _xywh getter produces the same results as the
+	// ctx.Lay_vec4-return-value version.
+
+	root_r_cs := ctx.Lay_get_rect_xywh(root)
+	child_r_cs := ctx.Lay_get_rect_xywh(child)
+	LTEST_TRUE(t, root_r[0] == root_r_cs[0] && root_r[1] == root_r_cs[1] && root_r[2] == root_r_cs[2] && root_r[3] == root_r_cs[3])
+	LTEST_TRUE(t, child_r[0] == child_r_cs[0] && child_r[1] == child_r_cs[1] && child_r[2] == child_r_cs[2] && child_r[3] == child_r_cs[3])
+}
