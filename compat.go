@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	gl "github.com/go-gl/gl/v4.1-core/gl"
+	//"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
 // ENGOGLTexture one day my become gl. from "engo.io/gl"
@@ -512,21 +513,22 @@ func NewContext() *Context {
 		RGB565:                       gl.RGB565,
 		RGBA:                         gl.RGBA,
 		RGBA32F:                      gl.RGBA32F,
-		RGBA4:                        gl.RGBA4,
-		SAMPLER_2D:                   gl.SAMPLER_2D,
-		SAMPLER_CUBE:                 gl.SAMPLER_CUBE,
-		SAMPLES:                      gl.SAMPLES,
-		SAMPLE_ALPHA_TO_COVERAGE:     gl.SAMPLE_ALPHA_TO_COVERAGE,
-		SAMPLE_BUFFERS:               gl.SAMPLE_BUFFERS,
-		SAMPLE_COVERAGE:              gl.SAMPLE_COVERAGE,
-		SAMPLE_COVERAGE_INVERT:       gl.SAMPLE_COVERAGE_INVERT,
-		SAMPLE_COVERAGE_VALUE:        gl.SAMPLE_COVERAGE_VALUE,
-		SCISSOR_BOX:                  gl.SCISSOR_BOX,
-		SCISSOR_TEST:                 gl.SCISSOR_TEST,
-		SHADER_COMPILER:              gl.SHADER_COMPILER,
-		SHADER_SOURCE_LENGTH:         gl.SHADER_SOURCE_LENGTH,
-		SHADER_TYPE:                  gl.SHADER_TYPE,
-		SHADING_LANGUAGE_VERSION:     gl.SHADING_LANGUAGE_VERSION,
+		//RGBA32F:                  0x8814,
+		RGBA4:                    gl.RGBA4,
+		SAMPLER_2D:               gl.SAMPLER_2D,
+		SAMPLER_CUBE:             gl.SAMPLER_CUBE,
+		SAMPLES:                  gl.SAMPLES,
+		SAMPLE_ALPHA_TO_COVERAGE: gl.SAMPLE_ALPHA_TO_COVERAGE,
+		SAMPLE_BUFFERS:           gl.SAMPLE_BUFFERS,
+		SAMPLE_COVERAGE:          gl.SAMPLE_COVERAGE,
+		SAMPLE_COVERAGE_INVERT:   gl.SAMPLE_COVERAGE_INVERT,
+		SAMPLE_COVERAGE_VALUE:    gl.SAMPLE_COVERAGE_VALUE,
+		SCISSOR_BOX:              gl.SCISSOR_BOX,
+		SCISSOR_TEST:             gl.SCISSOR_TEST,
+		SHADER_COMPILER:          gl.SHADER_COMPILER,
+		SHADER_SOURCE_LENGTH:     gl.SHADER_SOURCE_LENGTH,
+		SHADER_TYPE:              gl.SHADER_TYPE,
+		SHADING_LANGUAGE_VERSION: gl.SHADING_LANGUAGE_VERSION,
 		SHORT:                        gl.SHORT,
 		SRC_ALPHA:                    gl.SRC_ALPHA,
 		SRC_ALPHA_SATURATE:           gl.SRC_ALPHA_SATURATE,
