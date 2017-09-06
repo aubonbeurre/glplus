@@ -110,9 +110,6 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 
 func (s *String) createVertexBuffer(f *Font) {
 	n := len(s.Chars)
-	opt := DefaultVBOOptions()
-	opt.Quads = n
-	s.vbo = NewVBO(opt)
 
 	verts := make([]float32, n*20)
 	indices := make([]uint32, n*6)
@@ -185,7 +182,9 @@ func (s *String) createVertexBuffer(f *Font) {
 		curX += w
 	}
 
-	s.vbo.Load(verts[:], indices[:])
+	opt := DefaultVBOOptions()
+	opt.Quads = n
+	s.vbo = NewVBO(opt, verts[:], indices[:])
 }
 
 // Font ...

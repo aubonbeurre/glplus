@@ -57,94 +57,12 @@ var (
   }`
 )
 
-// ObjVBO ...
-type ObjVBO struct {
-	vao      *ENGOGLVertexArray
-	vboVerts *ENGOGLBuffer
-	numElem  int
-}
-
-// DeleteVBO ...
-func (v *ObjVBO) DeleteVBO() {
-	if v.vboVerts != nil {
-		Gl.DeleteBuffer(v.vboVerts)
-	}
-	if v.vao != nil {
-		Gl.DeleteVertexArray(v.vao)
-	}
-}
-
-// Bind ...
-func (v *ObjVBO) Bind() {
-	Gl.BindVertexArray(v.vao)
-	Gl.EnableVertexAttribArray(gPositionAttr)
-	Gl.EnableVertexAttribArray(gUVsAttr)
-	Gl.EnableVertexAttribArray(gNormalsAttr)
-	Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
-}
-
-// Unbind ...
-func (v *ObjVBO) Unbind() {
-	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
-	Gl.DisableVertexAttribArray(gPositionAttr)
-	Gl.DisableVertexAttribArray(gUVsAttr)
-	Gl.DisableVertexAttribArray(gNormalsAttr)
-	Gl.BindVertexArray(nil)
-}
-
-// Draw ...
-func (v *ObjVBO) Draw() {
-	/*arrayDrawTypes := []uint32{
-		Gl.TRIANGLES,
-		Gl.TRIANGLES_ADJACENCY,
-		Gl.TRIANGLE_FAN,
-		Gl.TRIANGLE_STRIP,
-		Gl.TRIANGLE_STRIP_ADJACENCY,
-		Gl.QUADS,
-	}*/
-	Gl.DrawArrays(Gl.TRIANGLES, 0, v.numElem)
-}
-
-// Load ...
-func (v *ObjVBO) Load(fverts []float32) {
-	Gl.BindVertexArray(v.vao)
-	Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
-
-	Gl.BufferData(Gl.ARRAY_BUFFER, fverts, Gl.STATIC_DRAW)
-
-	Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 32, 0)
-	Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 32, 12)
-	Gl.VertexAttribPointer(gNormalsAttr, 3, Gl.FLOAT, false, 32, 20)
-
-	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
-	Gl.BindVertexArray(nil)
-
-	v.numElem = len(fverts) / 8
-}
-
-func allocObjRender() (vbo *ObjVBO) {
-	// create and bind the required VAO object
-	var vao *ENGOGLVertexArray
-	vao = Gl.CreateVertexArray()
-	Gl.BindVertexArray(vao)
-
-	// create a VBO to hold the vertex data
-	var vboVerts *ENGOGLBuffer
-	vboVerts = Gl.CreateBuffer()
-
-	vbo = &ObjVBO{vao: vao,
-		vboVerts: vboVerts,
-		numElem:  0,
-	}
-	return vbo
-}
-
 // ObjRender ...
 type ObjRender struct {
 	Obj *Obj
 
 	progCoord *Program
-	vbo       *ObjVBO
+	vbo       *VBO
 	tex       *Texture
 }
 
@@ -203,9 +121,9 @@ func NewObjsVBO(objs []*Obj) (m *ObjsRender) {
 
 // NewObjVBO ...
 func NewObjVBO(obj *Obj) (m *ObjRender) {
-	var objvbo *ObjVBO
-	objvbo = allocObjRender()
-	objvbo.Load(obj.ObjVertices)
+	opt := DefaultVBOOptions()
+	opt.Normals = 3
+	var objvbo = NewVBO(opt, obj.ObjVertices, nil)
 
 	m = &ObjRender{
 		vbo: objvbo,

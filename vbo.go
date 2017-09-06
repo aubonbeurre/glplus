@@ -54,12 +54,20 @@ func (v *VBO) Bind() {
 	if v.options.Normals != 0 {
 		Gl.EnableVertexAttribArray(gNormalsAttr)
 	}
-	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+	if v.vboIndices != nil {
+		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+	} else {
+		Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
+	}
 }
 
 // Unbind ...
 func (v *VBO) Unbind() {
-	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	if v.vboIndices != nil {
+		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	} else {
+		Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
+	}
 	if v.options.Vertex != 0 {
 		Gl.DisableVertexAttribArray(gPositionAttr)
 	}
@@ -82,59 +90,79 @@ func (v *VBO) elemType() int {
 
 // Draw ...
 func (v *VBO) Draw() {
-	if v.options.Quads != 0 {
-		Gl.DrawElements(Gl.TRIANGLES, v.options.Quads*6, v.elemType(), 0)
-	} else if v.options.IsStrip {
-		Gl.DrawElements(Gl.TRIANGLE_STRIP, v.numElem, v.elemType(), 0)
+	if v.vboIndices != nil {
+		if v.options.Quads != 0 {
+			Gl.DrawElements(Gl.TRIANGLES, v.options.Quads*6, v.elemType(), 0)
+		} else if v.options.IsStrip {
+			Gl.DrawElements(Gl.TRIANGLE_STRIP, v.numElem, v.elemType(), 0)
+		} else {
+			Gl.DrawElements(Gl.TRIANGLES, v.numElem, v.elemType(), 0)
+		}
 	} else {
-		Gl.DrawElements(Gl.TRIANGLES, v.numElem, v.elemType(), 0)
+		if v.options.Quads != 0 {
+			Gl.DrawArrays(Gl.TRIANGLES, 0, v.options.Quads*6)
+		} else if v.options.IsStrip {
+			Gl.DrawArrays(Gl.TRIANGLE_STRIP, 0, v.numElem)
+		} else {
+			Gl.DrawArrays(Gl.TRIANGLES, 0, v.numElem)
+		}
 	}
 }
 
 // Load ...
-func (v *VBO) Load(verts []float32, indices []uint32) {
+func (v *VBO) load(verts []float32, indices []uint32) {
 	Gl.BindVertexArray(v.vao)
 	Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
-	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+	if v.vboIndices != nil {
+		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
+	}
 
 	// load our data up and bind it to the 'position' shader attribute
 	Gl.BufferData(Gl.ARRAY_BUFFER, verts, Gl.STATIC_DRAW)
 
-	if len(indices) < math.MaxUint16 {
-		v.isShort = true
-		uindices := make([]uint16, len(indices))
-		for i, ind := range indices {
-			uindices[i] = uint16(ind)
+	if v.vboIndices != nil {
+		if len(indices) < math.MaxUint16 {
+			v.isShort = true
+			uindices := make([]uint16, len(indices))
+			for i, ind := range indices {
+				uindices[i] = uint16(ind)
+			}
+			Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, uindices, Gl.STATIC_DRAW)
+		} else {
+			Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
 		}
-		Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, uindices, Gl.STATIC_DRAW)
-	} else {
-		Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
 	}
 
-	var totalSize = (v.options.Vertex + v.options.UV + v.options.Normals) * 4
+	var numElemsPerVertex = v.options.Vertex + v.options.UV + v.options.Normals
+	var totalSize = numElemsPerVertex * 4
 	var offset int
 	if v.options.Vertex != 0 {
 		Gl.VertexAttribPointer(gPositionAttr, v.options.Vertex, Gl.FLOAT, false, totalSize, offset)
 		offset += v.options.Vertex * 4
 	}
-	if v.options.Normals != 0 {
-		Gl.VertexAttribPointer(gNormalsAttr, v.options.Normals, Gl.FLOAT, false, totalSize, offset)
-		offset += v.options.Normals * 4
-	}
 	if v.options.UV != 0 {
 		Gl.VertexAttribPointer(gUVsAttr, v.options.UV, Gl.FLOAT, false, totalSize, offset)
 		offset += v.options.UV * 4
 	}
+	if v.options.Normals != 0 {
+		Gl.VertexAttribPointer(gNormalsAttr, v.options.Normals, Gl.FLOAT, false, totalSize, offset)
+	}
 
 	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
-	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	if v.vboIndices != nil {
+		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
+	}
 	Gl.BindVertexArray(nil)
 
-	v.numElem = len(indices)
+	if v.vboIndices != nil {
+		v.numElem = len(indices)
+	} else {
+		v.numElem = len(verts) / numElemsPerVertex
+	}
 }
 
 // NewVBO ...
-func NewVBO(options VBOOptions) (vbo *VBO) {
+func NewVBO(options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
 	// create and bind the required VAO object
 	var vao *ENGOGLVertexArray
 	vao = Gl.CreateVertexArray()
@@ -144,7 +172,9 @@ func NewVBO(options VBOOptions) (vbo *VBO) {
 	var vboVerts *ENGOGLBuffer
 	var vboIndices *ENGOGLBuffer
 	vboVerts = Gl.CreateBuffer()
-	vboIndices = Gl.CreateBuffer()
+	if indices != nil {
+		vboIndices = Gl.CreateBuffer()
+	}
 
 	vbo = &VBO{vao: vao,
 		vboVerts:   vboVerts,
@@ -153,12 +183,14 @@ func NewVBO(options VBOOptions) (vbo *VBO) {
 		options:    options,
 	}
 	Gl.BindVertexArray(nil)
+
+	vbo.load(verts, indices)
+
 	return vbo
 }
 
 // NewVBOQuad ...
 func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
-	vbo = NewVBO(DefaultVBOOptions())
 
 	verts := [...]float32{
 		x, y, 0.0, 0, 0,
@@ -172,15 +204,12 @@ func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
 		2, 3, 0,
 	}
 
-	vbo.Load(verts[:], indices[:])
-
+	vbo = NewVBO(DefaultVBOOptions(), verts[:], indices[:])
 	return vbo
 }
 
 // NewVBOCube ...
 func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	vbo = NewVBO(DefaultVBOOptions())
-
 	verts := [...]float32{
 		// front
 		-1.0, -1.0, 1.0, 0, 0,
@@ -223,18 +252,12 @@ func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32
 		6, 7, 3,
 	}
 
-	vbo.Load(verts[:], indices[:])
-
+	vbo = NewVBO(DefaultVBOOptions(), verts[:], indices[:])
 	return vbo
 }
 
 // NewVBOCubeNormal ...
 func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	opt := DefaultVBOOptions()
-	opt.IsStrip = true
-	opt.Normals = 3
-	vbo = NewVBO(opt)
-
 	verts := [...]float32{
 		// Vertex data for face 0
 		-1.0, -1.0, 1.0, 0.0, 0.0, 0, 0, 1, // v0
@@ -290,7 +313,10 @@ func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w f
 		20, 20, 21, 22, 23, // Face 5 - triangle strip (v20, v21, v22, v23)
 	}
 
-	vbo.Load(verts[:], indices[:])
+	opt := DefaultVBOOptions()
+	opt.IsStrip = true
+	opt.Normals = 3
+	vbo = NewVBO(opt, verts[:], indices[:])
 
 	return vbo
 }

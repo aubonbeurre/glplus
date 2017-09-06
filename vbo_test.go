@@ -46,12 +46,6 @@ func checkGlError(t *testing.T) {
 	}
 }
 
-func subtestNewVBO(t *testing.T) {
-	vbo := NewVBO(VBOOptions{})
-	checkGlError(t)
-	defer vbo.DeleteVBO()
-}
-
 func subtestNewVBOQuad(t *testing.T) {
 	vbo := NewVBOQuad(0, 0, 1, 1)
 	checkGlError(t)
@@ -132,7 +126,6 @@ func TestVBO(t *testing.T) {
 
 	Gl = NewContext()
 
-	t.Run("NewVBO", subtestNewVBO)
 	t.Run("NewVBOQuad", subtestNewVBOQuad)
 	t.Run("NewVBOCube", subtestNewVBOCube)
 	t.Run("NewVBOCubeNormal", subtestNewVBOCubeNormal)
