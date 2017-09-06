@@ -640,6 +640,10 @@ func (c *Context) Version() string {
 	return gl.GoStr(gl.GetString(gl.VERSION))
 }
 
+func (c *Context) GetError() int {
+	return int(gl.GetError())
+}
+
 func (c *Context) Ptr(data interface{}) unsafe.Pointer {
 	return gl.Ptr(data)
 }

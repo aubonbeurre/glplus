@@ -1,13 +1,23 @@
 package glplus
 
+import "math"
+
+// VBOOptions ...
+type VBOOptions struct {
+	HasNormals bool
+	IsStrip    bool
+	Quads      int
+}
+
 // VBO ...
 type VBO struct {
 	vao        *ENGOGLVertexArray
 	vboVerts   *ENGOGLBuffer
 	vboIndices *ENGOGLBuffer
 	numElem    int
-	hasNormals bool
-	isStrip    bool
+	isShort    bool
+
+	options VBOOptions
 }
 
 // DeleteVBO ...
@@ -28,7 +38,7 @@ func (v *VBO) Bind() {
 	Gl.BindVertexArray(v.vao)
 	Gl.EnableVertexAttribArray(gPositionAttr)
 	Gl.EnableVertexAttribArray(gUVsAttr)
-	if v.hasNormals {
+	if v.options.HasNormals {
 		Gl.EnableVertexAttribArray(gNormalsAttr)
 	}
 	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
@@ -39,24 +49,29 @@ func (v *VBO) Unbind() {
 	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
 	Gl.DisableVertexAttribArray(gPositionAttr)
 	Gl.DisableVertexAttribArray(gUVsAttr)
-	if v.hasNormals {
+	if v.options.HasNormals {
 		Gl.DisableVertexAttribArray(gNormalsAttr)
 	}
 	Gl.BindVertexArray(nil)
 }
 
-// Draw ...
-func (v *VBO) Draw() {
-	if v.isStrip {
-		Gl.DrawElements(Gl.TRIANGLE_STRIP, v.numElem, Gl.UNSIGNED_INT, 0)
-	} else {
-		Gl.DrawElements(Gl.TRIANGLES, v.numElem, Gl.UNSIGNED_INT, 0)
+func (v *VBO) elemType() int {
+	if v.isShort {
+		return Gl.UNSIGNED_SHORT
 	}
+
+	return Gl.UNSIGNED_INT
 }
 
-// DrawQuads ...
-func (v *VBO) DrawQuads(nquads int) {
-	Gl.DrawElements(Gl.TRIANGLES, nquads*6, Gl.UNSIGNED_INT, 0)
+// Draw ...
+func (v *VBO) Draw() {
+	if v.options.Quads != 0 {
+		Gl.DrawElements(Gl.TRIANGLES, v.options.Quads*6, v.elemType(), 0)
+	} else if v.options.IsStrip {
+		Gl.DrawElements(Gl.TRIANGLE_STRIP, v.numElem, v.elemType(), 0)
+	} else {
+		Gl.DrawElements(Gl.TRIANGLES, v.numElem, v.elemType(), 0)
+	}
 }
 
 // Load ...
@@ -67,9 +82,19 @@ func (v *VBO) Load(verts []float32, indices []uint32) {
 
 	// load our data up and bind it to the 'position' shader attribute
 	Gl.BufferData(Gl.ARRAY_BUFFER, verts, Gl.STATIC_DRAW)
-	Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
 
-	if v.hasNormals {
+	if len(indices) < math.MaxUint16 {
+		v.isShort = true
+		uindices := make([]uint16, len(indices))
+		for i, ind := range indices {
+			uindices[i] = uint16(ind)
+		}
+		Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, uindices, Gl.STATIC_DRAW)
+	} else {
+		Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
+	}
+
+	if v.options.HasNormals {
 		Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 32, 0)
 		Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 32, 12)
 		Gl.VertexAttribPointer(gNormalsAttr, 3, Gl.FLOAT, false, 32, 20)
@@ -87,7 +112,7 @@ func (v *VBO) Load(verts []float32, indices []uint32) {
 }
 
 // NewVBO ...
-func NewVBO(isStrip bool) (vbo *VBO) {
+func NewVBO(options VBOOptions) (vbo *VBO) {
 	// create and bind the required VAO object
 	var vao *ENGOGLVertexArray
 	vao = Gl.CreateVertexArray()
@@ -103,8 +128,7 @@ func NewVBO(isStrip bool) (vbo *VBO) {
 		vboVerts:   vboVerts,
 		vboIndices: vboIndices,
 		numElem:    0,
-		hasNormals: false,
-		isStrip:    isStrip,
+		options:    options,
 	}
 	Gl.BindVertexArray(nil)
 	return vbo
@@ -112,7 +136,7 @@ func NewVBO(isStrip bool) (vbo *VBO) {
 
 // NewVBOQuad ...
 func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
-	vbo = NewVBO(false)
+	vbo = NewVBO(VBOOptions{})
 
 	verts := [...]float32{
 		x, y, 0.0, 0, 0,
@@ -133,7 +157,7 @@ func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
 
 // NewVBOCube ...
 func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	vbo = NewVBO(false)
+	vbo = NewVBO(VBOOptions{})
 
 	verts := [...]float32{
 		// front
@@ -184,8 +208,7 @@ func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32
 
 // NewVBOCubeNormal ...
 func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	vbo = NewVBO(true)
-	vbo.hasNormals = true
+	vbo = NewVBO(VBOOptions{IsStrip: true, HasNormals: true})
 
 	verts := [...]float32{
 		// Vertex data for face 0

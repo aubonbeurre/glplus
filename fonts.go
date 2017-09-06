@@ -99,7 +99,7 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 		return err
 	}
 
-	s.vbo.DrawQuads(len(s.Chars))
+	s.vbo.Draw()
 
 	f.texture.UnbindTexture(0)
 	s.vbo.Unbind()
@@ -109,9 +109,8 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 }
 
 func (s *String) createVertexBuffer(f *Font) {
-	s.vbo = NewVBO(false)
-
 	n := len(s.Chars)
+	s.vbo = NewVBO(VBOOptions{Quads: n})
 
 	verts := make([]float32, n*20)
 	indices := make([]uint32, n*6)
