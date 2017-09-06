@@ -4,9 +4,18 @@ import "math"
 
 // VBOOptions ...
 type VBOOptions struct {
-	HasNormals bool
-	IsStrip    bool
-	Quads      int
+	Vertex  int
+	Normals int
+	UV      int
+	IsStrip bool
+	Quads   int
+}
+
+func DefaultVBOOptions() VBOOptions {
+	return VBOOptions{
+		Vertex: 3,
+		UV:     2,
+	}
 }
 
 // VBO ...
@@ -36,9 +45,13 @@ func (v *VBO) DeleteVBO() {
 // Bind ...
 func (v *VBO) Bind() {
 	Gl.BindVertexArray(v.vao)
-	Gl.EnableVertexAttribArray(gPositionAttr)
-	Gl.EnableVertexAttribArray(gUVsAttr)
-	if v.options.HasNormals {
+	if v.options.Vertex != 0 {
+		Gl.EnableVertexAttribArray(gPositionAttr)
+	}
+	if v.options.UV != 0 {
+		Gl.EnableVertexAttribArray(gUVsAttr)
+	}
+	if v.options.Normals != 0 {
 		Gl.EnableVertexAttribArray(gNormalsAttr)
 	}
 	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
@@ -47,9 +60,13 @@ func (v *VBO) Bind() {
 // Unbind ...
 func (v *VBO) Unbind() {
 	Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
-	Gl.DisableVertexAttribArray(gPositionAttr)
-	Gl.DisableVertexAttribArray(gUVsAttr)
-	if v.options.HasNormals {
+	if v.options.Vertex != 0 {
+		Gl.DisableVertexAttribArray(gPositionAttr)
+	}
+	if v.options.UV != 0 {
+		Gl.DisableVertexAttribArray(gUVsAttr)
+	}
+	if v.options.Normals != 0 {
 		Gl.DisableVertexAttribArray(gNormalsAttr)
 	}
 	Gl.BindVertexArray(nil)
@@ -94,14 +111,19 @@ func (v *VBO) Load(verts []float32, indices []uint32) {
 		Gl.BufferData(Gl.ELEMENT_ARRAY_BUFFER, indices, Gl.STATIC_DRAW)
 	}
 
-	if v.options.HasNormals {
-		Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 32, 0)
-		Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 32, 12)
-		Gl.VertexAttribPointer(gNormalsAttr, 3, Gl.FLOAT, false, 32, 20)
-	} else {
-		Gl.VertexAttribPointer(gPositionAttr, 3, Gl.FLOAT, false, 20, 0)
-		Gl.VertexAttribPointer(gUVsAttr, 2, Gl.FLOAT, false, 20, 12)
-
+	var totalSize = (v.options.Vertex + v.options.UV + v.options.Normals) * 4
+	var offset int
+	if v.options.Vertex != 0 {
+		Gl.VertexAttribPointer(gPositionAttr, v.options.Vertex, Gl.FLOAT, false, totalSize, offset)
+		offset += v.options.Vertex * 4
+	}
+	if v.options.Normals != 0 {
+		Gl.VertexAttribPointer(gNormalsAttr, v.options.Normals, Gl.FLOAT, false, totalSize, offset)
+		offset += v.options.Normals * 4
+	}
+	if v.options.UV != 0 {
+		Gl.VertexAttribPointer(gUVsAttr, v.options.UV, Gl.FLOAT, false, totalSize, offset)
+		offset += v.options.UV * 4
 	}
 
 	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
@@ -136,7 +158,7 @@ func NewVBO(options VBOOptions) (vbo *VBO) {
 
 // NewVBOQuad ...
 func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
-	vbo = NewVBO(VBOOptions{})
+	vbo = NewVBO(DefaultVBOOptions())
 
 	verts := [...]float32{
 		x, y, 0.0, 0, 0,
@@ -157,7 +179,7 @@ func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
 
 // NewVBOCube ...
 func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	vbo = NewVBO(VBOOptions{})
+	vbo = NewVBO(DefaultVBOOptions())
 
 	verts := [...]float32{
 		// front
@@ -208,7 +230,10 @@ func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32
 
 // NewVBOCubeNormal ...
 func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
-	vbo = NewVBO(VBOOptions{IsStrip: true, HasNormals: true})
+	opt := DefaultVBOOptions()
+	opt.IsStrip = true
+	opt.Normals = 3
+	vbo = NewVBO(opt)
 
 	verts := [...]float32{
 		// Vertex data for face 0
