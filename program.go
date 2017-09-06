@@ -132,7 +132,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 		vertShader = strings.Replace(vertShader, "VARYINGOUT", "varying", -1)
 		vertShader = strings.Replace(vertShader, "TEXTURE2D", "texture2D", -1)
 	} else {
-		vertShader = strings.Replace(vertShader, "ATTRIBUTE", "attribute", -1)
+		vertShader = strings.Replace(vertShader, "ATTRIBUTE", "in", -1)
 		vertShader = strings.Replace(vertShader, "VARYINGOUT", "out", -1)
 		vertShader = strings.Replace(vertShader, "TEXTURE2D", "texture", -1)
 	}
@@ -150,7 +150,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	} else {
 		fragShader = strings.Replace(fragShader, "ATTRIBUTE", "attribute", -1)
 		fragShader = strings.Replace(fragShader, "VARYINGIN", "in", -1)
-		fragShader = strings.Replace(fragShader, "COLOROUT", "out vec4 colourOut", -1)
+		fragShader = strings.Replace(fragShader, "COLOROUT", "out vec4 colourOut;", -1)
 		fragShader = strings.Replace(fragShader, "FRAGCOLOR", "colourOut", -1)
 		fragShader = strings.Replace(fragShader, "TEXTURE2D", "texture", -1)
 	}
