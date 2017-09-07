@@ -11,6 +11,7 @@ type VBOOptions struct {
 	Quads   int
 }
 
+// DefaultVBOOptions ...
 func DefaultVBOOptions() VBOOptions {
 	return VBOOptions{
 		Vertex: 3,
