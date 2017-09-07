@@ -71,9 +71,6 @@ func (s *String) DeleteString() {
 
 // Draw ...
 func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, scale float32, offsetX float32, offsetY float32) (err error) {
-	if s.vbo == nil {
-		s.createVertexBuffer(f)
-	}
 	if f.program == nil {
 		var attribs = []string{
 			"position",
@@ -83,10 +80,13 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 			return (err)
 		}
 	}
+	if s.vbo == nil {
+		s.createVertexBuffer(f)
+	}
 
 	f.program.UseProgram()
 	f.texture.BindTexture(0)
-	s.vbo.Bind()
+	s.vbo.Bind(f.program)
 
 	var matrixfont = mat.Mul3(mgl32.Scale2D(scale, scale))
 	matrixfont = matrixfont.Mul3(mgl32.Translate2D(offsetX, offsetY))
@@ -102,7 +102,7 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 	s.vbo.Draw()
 
 	f.texture.UnbindTexture(0)
-	s.vbo.Unbind()
+	s.vbo.Unbind(f.program)
 	f.program.UnuseProgram()
 
 	return nil
@@ -184,7 +184,7 @@ func (s *String) createVertexBuffer(f *Font) {
 
 	opt := DefaultVBOOptions()
 	opt.Quads = n
-	s.vbo = NewVBO(opt, verts[:], indices[:])
+	s.vbo = NewVBO(f.program, opt, verts[:], indices[:])
 }
 
 // Font ...

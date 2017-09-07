@@ -118,7 +118,7 @@ func (b *Button) Draw(color [4]float32, bg [4]float32, mat mgl32.Mat3) (err erro
 	vbo := sButtonProgramSingleton.vbo
 
 	program.UseProgram()
-	vbo.Bind()
+	vbo.Bind(program)
 
 	var m = mat.Mul3(mgl32.Scale2D(float32(b.Size.X), float32(b.Size.Y)))
 
@@ -132,7 +132,7 @@ func (b *Button) Draw(color [4]float32, bg [4]float32, mat mgl32.Mat3) (err erro
 
 	vbo.Draw()
 
-	vbo.Unbind()
+	vbo.Unbind(program)
 	program.UnuseProgram()
 
 	return nil
@@ -141,19 +141,21 @@ func (b *Button) Draw(color [4]float32, bg [4]float32, mat mgl32.Mat3) (err erro
 // NewButton ...
 func NewButton(size image.Point) (btn *Button, err error) {
 	if sButtonProgramSingleton == nil {
-		sButtonProgramSingleton = &ButtonProgram{
-			vbo: NewVBOQuad(0, 0, 1, 1),
-			ReleasingReferenceCount: NewReferenceCount(),
-		}
-
 		var attribs = []string{
 			"position",
 			"uvs",
 		}
 		var err error
-		if sButtonProgramSingleton.program, err = LoadShaderProgram(vertShaderButton, fragShaderButton, attribs); err != nil {
+		var program *Program
+		if program, err = LoadShaderProgram(vertShaderButton, fragShaderButton, attribs); err != nil {
 			return nil, err
 		}
+		sButtonProgramSingleton = &ButtonProgram{
+			vbo: NewVBOQuad(program, 0, 0, 1, 1),
+			ReleasingReferenceCount: NewReferenceCount(),
+			program:                 program,
+		}
+
 	} else {
 		sButtonProgramSingleton.Incr()
 	}

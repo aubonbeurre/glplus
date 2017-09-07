@@ -11,6 +11,7 @@ type Program struct {
 	prog *ENGOGLProgram
 
 	uniforms map[string]*ENGOGLUniformLocation
+	attribs  []string
 }
 
 // DeleteProgram ...
@@ -47,8 +48,8 @@ func (p *Program) GetUniformLocation(s string) *ENGOGLUniformLocation {
 }
 
 // GetAttribLocation ...
-func (p *Program) GetAttribLocation(s string) uint32 {
-	return uint32(Gl.GetAttribLocation(p.prog, s))
+func (p *Program) GetAttribLocation(s string) int {
+	return Gl.GetAttribLocation(p.prog, s)
 }
 
 // UseProgram ...
@@ -120,6 +121,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	var p = &Program{
 		prog:     prog,
 		uniforms: make(map[string]*ENGOGLUniformLocation),
+		attribs:  attribs,
 	}
 
 	if Ogl2ShaderCompat {
@@ -177,10 +179,6 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	Gl.AttachShader(prog, vs)
 	Gl.AttachShader(prog, fs)
 
-	for i := 1; i <= len(attribs); i++ {
-		Gl.BindAttribLocation(prog, i, attribs[i-1])
-	}
-
 	Gl.LinkProgram(prog)
 
 	if !Gl.GetProgramParameterb(p.prog, Gl.LINK_STATUS) {
@@ -192,4 +190,12 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	Gl.DeleteShader(fs)
 
 	return p, nil
+}
+
+func (p *Program) GetAttribs() (attribs map[string]int) {
+	attribs = make(map[string]int)
+	for _, attr := range p.attribs {
+		attribs[attr] = Gl.GetAttribLocation(p.prog, attr)
+	}
+	return attribs
 }

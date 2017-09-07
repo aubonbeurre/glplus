@@ -28,6 +28,7 @@ type VBO struct {
 	isShort    bool
 
 	options VBOOptions
+	attribs map[string]int
 }
 
 // DeleteVBO ...
@@ -44,16 +45,18 @@ func (v *VBO) DeleteVBO() {
 }
 
 // Bind ...
-func (v *VBO) Bind() {
+func (v *VBO) Bind(prog *Program) {
 	Gl.BindVertexArray(v.vao)
+	attribs := prog.GetAttribs()
+
 	if v.options.Vertex != 0 {
-		Gl.EnableVertexAttribArray(gPositionAttr)
+		Gl.EnableVertexAttribArray(attribs["position"])
 	}
 	if v.options.UV != 0 {
-		Gl.EnableVertexAttribArray(gUVsAttr)
+		Gl.EnableVertexAttribArray(attribs["uvs"])
 	}
 	if v.options.Normals != 0 {
-		Gl.EnableVertexAttribArray(gNormalsAttr)
+		Gl.EnableVertexAttribArray(attribs["normal"])
 	}
 	if v.vboIndices != nil {
 		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, v.vboIndices)
@@ -63,20 +66,22 @@ func (v *VBO) Bind() {
 }
 
 // Unbind ...
-func (v *VBO) Unbind() {
+func (v *VBO) Unbind(prog *Program) {
+	attribs := prog.GetAttribs()
+
 	if v.vboIndices != nil {
 		Gl.BindBuffer(Gl.ELEMENT_ARRAY_BUFFER, nil)
 	} else {
 		Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
 	}
 	if v.options.Vertex != 0 {
-		Gl.DisableVertexAttribArray(gPositionAttr)
+		Gl.DisableVertexAttribArray(attribs["position"])
 	}
 	if v.options.UV != 0 {
-		Gl.DisableVertexAttribArray(gUVsAttr)
+		Gl.DisableVertexAttribArray(attribs["uvs"])
 	}
 	if v.options.Normals != 0 {
-		Gl.DisableVertexAttribArray(gNormalsAttr)
+		Gl.DisableVertexAttribArray(attribs["normal"])
 	}
 	Gl.BindVertexArray(nil)
 }
@@ -111,7 +116,9 @@ func (v *VBO) Draw() {
 }
 
 // Load ...
-func (v *VBO) load(verts []float32, indices []uint32) {
+func (v *VBO) load(prog *Program, verts []float32, indices []uint32) {
+	attribs := prog.GetAttribs()
+
 	Gl.BindVertexArray(v.vao)
 	Gl.BindBuffer(Gl.ARRAY_BUFFER, v.vboVerts)
 	if v.vboIndices != nil {
@@ -138,15 +145,15 @@ func (v *VBO) load(verts []float32, indices []uint32) {
 	var totalSize = numElemsPerVertex * 4
 	var offset int
 	if v.options.Vertex != 0 {
-		Gl.VertexAttribPointer(gPositionAttr, v.options.Vertex, Gl.FLOAT, false, totalSize, offset)
+		Gl.VertexAttribPointer(attribs["position"], v.options.Vertex, Gl.FLOAT, false, totalSize, offset)
 		offset += v.options.Vertex * 4
 	}
 	if v.options.UV != 0 {
-		Gl.VertexAttribPointer(gUVsAttr, v.options.UV, Gl.FLOAT, false, totalSize, offset)
+		Gl.VertexAttribPointer(attribs["uvs"], v.options.UV, Gl.FLOAT, false, totalSize, offset)
 		offset += v.options.UV * 4
 	}
 	if v.options.Normals != 0 {
-		Gl.VertexAttribPointer(gNormalsAttr, v.options.Normals, Gl.FLOAT, false, totalSize, offset)
+		Gl.VertexAttribPointer(attribs["normal"], v.options.Normals, Gl.FLOAT, false, totalSize, offset)
 	}
 
 	Gl.BindBuffer(Gl.ARRAY_BUFFER, nil)
@@ -163,7 +170,7 @@ func (v *VBO) load(verts []float32, indices []uint32) {
 }
 
 // NewVBO ...
-func NewVBO(options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
+func NewVBO(prog *Program, options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
 	// create and bind the required VAO object
 	var vao *ENGOGLVertexArray
 	vao = Gl.CreateVertexArray()
@@ -185,13 +192,13 @@ func NewVBO(options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
 	}
 	Gl.BindVertexArray(nil)
 
-	vbo.load(verts, indices)
+	vbo.load(prog, verts, indices)
 
 	return vbo
 }
 
 // NewVBOQuad ...
-func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
+func NewVBOQuad(prog *Program, x float32, y float32, w float32, h float32) (vbo *VBO) {
 
 	verts := [...]float32{
 		x, y, 0.0, 0, 0,
@@ -205,12 +212,12 @@ func NewVBOQuad(x float32, y float32, w float32, h float32) (vbo *VBO) {
 		2, 3, 0,
 	}
 
-	vbo = NewVBO(DefaultVBOOptions(), verts[:], indices[:])
+	vbo = NewVBO(prog, DefaultVBOOptions(), verts[:], indices[:])
 	return vbo
 }
 
 // NewVBOCube ...
-func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
+func NewVBOCube(prog *Program, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
 	verts := [...]float32{
 		// front
 		-1.0, -1.0, 1.0, 0, 0,
@@ -253,53 +260,53 @@ func NewVBOCube(x float32, y float32, z float32, u float32, v float32, w float32
 		6, 7, 3,
 	}
 
-	vbo = NewVBO(DefaultVBOOptions(), verts[:], indices[:])
+	vbo = NewVBO(prog, DefaultVBOOptions(), verts[:], indices[:])
 	return vbo
 }
 
 // NewVBOCubeNormal ...
-func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
+func NewVBOCubeNormal(prog *Program, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
 	verts := [...]float32{
 		// Vertex data for face 0
-		-1.0, -1.0, 1.0, 0.0, 0.0, 0, 0, 1, // v0
-		1.0, -1.0, 1.0, 0.33, 0.0, 0, 0, 1, // v1
-		-1.0, 1.0, 1.0, 0.0, 0.5, 0, 0, 1, // v2
-		1.0, 1.0, 1.0, 0.33, 0.5, 0, 0, 1, // v3
+		-1.0, -1.0, 1.0, 0, 0, 1, // v0
+		1.0, -1.0, 1.0, 0, 0, 1, // v1
+		-1.0, 1.0, 1.0, 0, 0, 1, // v2
+		1.0, 1.0, 1.0, 0, 0, 1, // v3
 
 		// Vertex data for face 1
-		1.0, -1.0, 1.0, 0.0, 0.5, 1, 0, 0, // v4
-		1.0, -1.0, -1.0, 0.33, 0.5, 1, 0, 0, // v5
-		1.0, 1.0, 1.0, 0.0, 1.0, 1, 0, 0, // v6
-		1.0, 1.0, -1.0, 0.33, 1.0, 1, 0, 0, // v7
+		1.0, -1.0, 1.0, 1, 0, 0, // v4
+		1.0, -1.0, -1.0, 1, 0, 0, // v5
+		1.0, 1.0, 1.0, 1, 0, 0, // v6
+		1.0, 1.0, -1.0, 1, 0, 0, // v7
 
 		// Vertex data for face 2
-		1.0, -1.0, -1.0, 0.66, 0.5, 0, 0, -1, // v8
-		-1.0, -1.0, -1.0, 1.0, 0.5, 0, 0, -1, // v9
-		1.0, 1.0, -1.0, 0.66, 1.0, 0, 0, -1, // v10
-		-1.0, 1.0, -1.0, 1.0, 1.0, 0, 0, -1, // v11
+		1.0, -1.0, -1.0, 0, 0, -1, // v8
+		-1.0, -1.0, -1.0, 0, 0, -1, // v9
+		1.0, 1.0, -1.0, 0, 0, -1, // v10
+		-1.0, 1.0, -1.0, 0, 0, -1, // v11
 
 		// Vertex data for face 3
-		-1.0, -1.0, -1.0, 0.66, 0.0, -1, 0, 0, // v12
-		-1.0, -1.0, 1.0, 1.0, 0.0, -1, 0, 0, // v13
-		-1.0, 1.0, -1.0, 0.66, 0.5, -1, 0, 0, // v14
-		-1.0, 1.0, 1.0, 1.0, 0.5, -1, 0, 0, // v15
+		-1.0, -1.0, -1.0, -1, 0, 0, // v12
+		-1.0, -1.0, 1.0, -1, 0, 0, // v13
+		-1.0, 1.0, -1.0, -1, 0, 0, // v14
+		-1.0, 1.0, 1.0, -1, 0, 0, // v15
 
 		// Vertex data for face 4
-		-1.0, -1.0, -1.0, 0.33, 0.0, 0, -1, 0, // v16
-		1.0, -1.0, -1.0, 0.66, 0.0, 0, -1, 0, // v17
-		-1.0, -1.0, 1.0, 0.33, 0.5, 0, -1, 0, // v18
-		1.0, -1.0, 1.0, 0.66, 0.5, 0, -1, 0, // v19
+		-1.0, -1.0, -1.0, 0, -1, 0, // v16
+		1.0, -1.0, -1.0, 0, -1, 0, // v17
+		-1.0, -1.0, 1.0, 0, -1, 0, // v18
+		1.0, -1.0, 1.0, 0, -1, 0, // v19
 
 		// Vertex data for face 5
-		-1.0, 1.0, 1.0, 0.33, 0.5, 0, 1, 0, // v20
-		1.0, 1.0, 1.0, 0.66, 0.5, 0, 1, 0, // v21
-		-1.0, 1.0, -1.0, 0.33, 1.0, 0, 1, 0, // v22
-		1.0, 1.0, -1.0, 0.66, 1.0, 0, 1, 0, // v23
+		-1.0, 1.0, 1.0, 0, 1, 0, // v20
+		1.0, 1.0, 1.0, 0, 1, 0, // v21
+		-1.0, 1.0, -1.0, 0, 1, 0, // v22
+		1.0, 1.0, -1.0, 0, 1, 0, // v23
 	}
 
 	var i uint32
 	for i = 0; i < 24; i++ {
-		var ind = i * 8
+		var ind = i * 6
 		verts[ind+0] = verts[ind+0]*u + x
 		verts[ind+1] = verts[ind+1]*v + y
 		verts[ind+2] = verts[ind+2]*w + z
@@ -317,7 +324,8 @@ func NewVBOCubeNormal(x float32, y float32, z float32, u float32, v float32, w f
 	opt := DefaultVBOOptions()
 	opt.IsStrip = true
 	opt.Normals = 3
-	vbo = NewVBO(opt, verts[:], indices[:])
+	opt.UV = 0
+	vbo = NewVBO(prog, opt, verts[:], indices[:])
 
 	return vbo
 }

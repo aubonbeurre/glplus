@@ -121,21 +121,17 @@ func NewObjsVBO(objs []*Obj) (m *ObjsRender) {
 
 // NewObjVBO ...
 func NewObjVBO(obj *Obj) (m *ObjRender) {
-	opt := DefaultVBOOptions()
-	opt.Normals = 3
-	var objvbo = NewVBO(opt, obj.ObjVertices, nil)
+	var err error
 
 	m = &ObjRender{
-		vbo: objvbo,
 		Obj: obj,
 	}
+
 	var attribsNormal = []string{
 		"position",
 		"uvs",
 		"normal",
 	}
-	var err error
-
 	if obj.TexImg != nil {
 		if m.progCoord, err = LoadShaderProgram(sVertShaderObj, sFragShaderObjTex, attribsNormal); err != nil {
 			panic(err)
@@ -149,6 +145,10 @@ func NewObjVBO(obj *Obj) (m *ObjRender) {
 			panic(err)
 		}
 	}
+
+	opt := DefaultVBOOptions()
+	opt.Normals = 3
+	m.vbo = NewVBO(m.progCoord, opt, obj.ObjVertices, nil)
 
 	return m
 }
@@ -194,14 +194,14 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 		m.progCoord.ProgramUniform1i("tex1", 0)
 	}
 
-	m.vbo.Bind()
+	m.vbo.Bind(m.progCoord)
 	m.progCoord.ProgramUniform4fv("color1", color1)
 	var err error
 	if err = m.progCoord.ValidateProgram(); err != nil {
 		panic(err)
 	}
 	m.vbo.Draw()
-	m.vbo.Unbind()
+	m.vbo.Unbind(m.progCoord)
 
 	if m.tex != nil {
 		m.tex.UnbindTexture(0)
