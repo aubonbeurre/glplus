@@ -47,7 +47,7 @@ func subtestRenderVBO(t *testing.T) {
 		"normal",
 	}
 	var err error
-	var progCoord *Program
+	var progCoord *GPProgram
 	if progCoord, err = LoadShaderProgram(sVertShaderCoordMarker, sFragShaderCoordMarker, attribsNormal); err != nil {
 		t.Fatal(err)
 	}

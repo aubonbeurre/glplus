@@ -61,7 +61,7 @@ var (
 type ObjRender struct {
 	Obj *Obj
 
-	progCoord *Program
+	progCoord *GPProgram
 	vbo       *VBO
 	tex       *Texture
 }

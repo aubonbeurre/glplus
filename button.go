@@ -82,7 +82,7 @@ type ButtonProgram struct {
 	ReleasingReferenceCount
 
 	vbo     *VBO
-	program *Program
+	program *GPProgram
 }
 
 // Delete ...
@@ -144,7 +144,7 @@ func NewButton(size image.Point) (btn *Button, err error) {
 			"uvs",
 		}
 		var err error
-		var program *Program
+		var program *GPProgram
 		if program, err = LoadShaderProgram(vertShaderButton, fragShaderButton, attribs); err != nil {
 			return nil, err
 		}

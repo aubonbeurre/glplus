@@ -45,7 +45,7 @@ func (v *VBO) DeleteVBO() {
 }
 
 // Bind ...
-func (v *VBO) Bind(prog *Program) {
+func (v *VBO) Bind(prog *GPProgram) {
 	Gl.BindVertexArray(v.vao)
 	attribs := prog.GetAttribs()
 
@@ -66,7 +66,7 @@ func (v *VBO) Bind(prog *Program) {
 }
 
 // Unbind ...
-func (v *VBO) Unbind(prog *Program) {
+func (v *VBO) Unbind(prog *GPProgram) {
 	attribs := prog.GetAttribs()
 
 	if v.vboIndices != nil {
@@ -116,7 +116,7 @@ func (v *VBO) Draw() {
 }
 
 // Load ...
-func (v *VBO) load(prog *Program, verts []float32, indices []uint32) {
+func (v *VBO) load(prog *GPProgram, verts []float32, indices []uint32) {
 	attribs := prog.GetAttribs()
 
 	Gl.BindVertexArray(v.vao)
@@ -170,7 +170,7 @@ func (v *VBO) load(prog *Program, verts []float32, indices []uint32) {
 }
 
 // NewVBO ...
-func NewVBO(prog *Program, options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
+func NewVBO(prog *GPProgram, options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
 	// create and bind the required VAO object
 	var vao *ENGOGLVertexArray
 	vao = Gl.CreateVertexArray()
@@ -198,7 +198,7 @@ func NewVBO(prog *Program, options VBOOptions, verts []float32, indices []uint32
 }
 
 // NewVBOQuad ...
-func NewVBOQuad(prog *Program, x float32, y float32, w float32, h float32) (vbo *VBO) {
+func NewVBOQuad(prog *GPProgram, x float32, y float32, w float32, h float32) (vbo *VBO) {
 
 	verts := [...]float32{
 		x, y, 0.0, 0, 0,
@@ -217,7 +217,7 @@ func NewVBOQuad(prog *Program, x float32, y float32, w float32, h float32) (vbo 
 }
 
 // NewVBOCube ...
-func NewVBOCube(prog *Program, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
+func NewVBOCube(prog *GPProgram, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
 	verts := [...]float32{
 		// front
 		-1.0, -1.0, 1.0, 0, 0,
@@ -265,7 +265,7 @@ func NewVBOCube(prog *Program, x float32, y float32, z float32, u float32, v flo
 }
 
 // NewVBOCubeNormal ...
-func NewVBOCubeNormal(prog *Program, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
+func NewVBOCubeNormal(prog *GPProgram, x float32, y float32, z float32, u float32, v float32, w float32) (vbo *VBO) {
 	verts := [...]float32{
 		// Vertex data for face 0
 		-1.0, -1.0, 1.0, 0, 0, 1, // v0

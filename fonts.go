@@ -189,7 +189,7 @@ func (s *String) createVertexBuffer(f *Font) {
 // Font ...
 type Font struct {
 	texture   *Texture
-	program   *Program
+	program   *GPProgram
 	rows      int
 	cellssize int
 	advances  []int

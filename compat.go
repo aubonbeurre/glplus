@@ -1,3 +1,5 @@
+//+build !netgo,!android
+
 package glplus
 
 import (

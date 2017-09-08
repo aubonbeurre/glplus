@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// Program ...
-type Program struct {
+// GPProgram ...
+type GPProgram struct {
 	prog *ENGOGLProgram
 
 	uniforms map[string]*ENGOGLUniformLocation
@@ -15,17 +15,17 @@ type Program struct {
 }
 
 // DeleteProgram ...
-func (p *Program) DeleteProgram() {
+func (p *GPProgram) DeleteProgram() {
 	Gl.DeleteProgram(p.prog)
 }
 
 // GetProgramInfoLog ...
-func (p *Program) GetProgramInfoLog() string {
+func (p *GPProgram) GetProgramInfoLog() string {
 	return Gl.GetProgramInfoLog(p.prog)
 }
 
 // ValidateProgram ...
-func (p *Program) ValidateProgram() error {
+func (p *GPProgram) ValidateProgram() error {
 	Gl.ValidateProgram(p.prog)
 
 	if !Gl.GetProgramParameterb(p.prog, Gl.VALIDATE_STATUS) {
@@ -35,7 +35,7 @@ func (p *Program) ValidateProgram() error {
 }
 
 // GetUniformLocation ...
-func (p *Program) GetUniformLocation(s string) *ENGOGLUniformLocation {
+func (p *GPProgram) GetUniformLocation(s string) *ENGOGLUniformLocation {
 	var res *ENGOGLUniformLocation
 	var ok bool
 	if res, ok = p.uniforms[s]; ok {
@@ -48,58 +48,58 @@ func (p *Program) GetUniformLocation(s string) *ENGOGLUniformLocation {
 }
 
 // GetAttribLocation ...
-func (p *Program) GetAttribLocation(s string) int {
+func (p *GPProgram) GetAttribLocation(s string) int {
 	return Gl.GetAttribLocation(p.prog, s)
 }
 
 // UseProgram ...
-func (p *Program) UseProgram() {
+func (p *GPProgram) UseProgram() {
 	Gl.UseProgram(p.prog)
 }
 
 // UnuseProgram ...
-func (p *Program) UnuseProgram() {
+func (p *GPProgram) UnuseProgram() {
 	Gl.UseProgram(nil)
 }
 
 // ProgramUniform1f ...
-func (p *Program) ProgramUniform1f(uniform string, value float32) {
+func (p *GPProgram) ProgramUniform1f(uniform string, value float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.Uniform1f(uniformloc, value)
 }
 
 // ProgramUniform2f ...
-func (p *Program) ProgramUniform2f(uniform string, v0 float32, v1 float32) {
+func (p *GPProgram) ProgramUniform2f(uniform string, v0 float32, v1 float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.Uniform2f(uniformloc, v0, v1)
 }
 
 // ProgramUniform4fv ...
-func (p *Program) ProgramUniform4fv(uniform string, value [4]float32) {
+func (p *GPProgram) ProgramUniform4fv(uniform string, value [4]float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.Uniform4f(uniformloc, value[0], value[1], value[2], value[3])
 }
 
 // ProgramUniform3fv ...
-func (p *Program) ProgramUniform3fv(uniform string, value [3]float32) {
+func (p *GPProgram) ProgramUniform3fv(uniform string, value [3]float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.Uniform3f(uniformloc, value[0], value[1], value[2])
 }
 
 // ProgramUniform1i ...
-func (p *Program) ProgramUniform1i(uniform string, value int) {
+func (p *GPProgram) ProgramUniform1i(uniform string, value int) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.Uniform1i(uniformloc, value)
 }
 
 // ProgramUniformMatrix4fv ...
-func (p *Program) ProgramUniformMatrix4fv(uniform string, matrix [16]float32) {
+func (p *GPProgram) ProgramUniformMatrix4fv(uniform string, matrix [16]float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.UniformMatrix4fv(uniformloc, false, matrix[:])
 }
 
 // ProgramUniformMatrix3fv ...
-func (p *Program) ProgramUniformMatrix3fv(uniform string, matrix [9]float32) {
+func (p *GPProgram) ProgramUniformMatrix3fv(uniform string, matrix [9]float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
 	Gl.UniformMatrix3fv(uniformloc, false, matrix[:])
 }
@@ -115,10 +115,10 @@ func ShaderSource(shader *ENGOGLShader, src string) {
 }
 
 // LoadShaderProgram ... loads shader objects and then attaches them to a program
-func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (*Program, error) {
+func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (*GPProgram, error) {
 	// create the program
 	var prog = Gl.CreateProgram()
-	var p = &Program{
+	var p = &GPProgram{
 		prog:     prog,
 		uniforms: make(map[string]*ENGOGLUniformLocation),
 		attribs:  attribs,
@@ -192,7 +192,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	return p, nil
 }
 
-func (p *Program) GetAttribs() (attribs map[string]int) {
+func (p *GPProgram) GetAttribs() (attribs map[string]int) {
 	attribs = make(map[string]int)
 	for _, attr := range p.attribs {
 		attribs[attr] = Gl.GetAttribLocation(p.prog, attr)
