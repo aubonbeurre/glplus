@@ -3,9 +3,7 @@ package glplus
 import (
 	"fmt"
 	"image"
-	"image/draw"
-	"os"
-	"path"
+	"io"
 
 	"github.com/aubonbeurre/go-obj/obj"
 )
@@ -15,18 +13,12 @@ type Obj struct {
 	Bounds      Bounds
 	ObjVertices []float32
 	Name        string
-	TexName     string
 	TexImg      *image.RGBA
 }
 
 // LoadObj ...
-func LoadObj(filename string, texname string) (objs []*Obj, err error) {
+func LoadObj(f io.Reader, png *image.RGBA) (objs []*Obj, err error) {
 
-	var f *os.File
-	f, err = os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
 	var o *obj.Object
 	o, err = obj.NewReader(f).Read()
 	if err != nil {
@@ -97,32 +89,14 @@ func LoadObj(filename string, texname string) (objs []*Obj, err error) {
 
 		var rgba *image.RGBA
 
-		if HasUVs && texname != "" {
-			imgPath := path.Join(path.Dir(filename), texname)
-
-			var imgFile *os.File
-			if imgFile, err = os.Open(imgPath); err != nil {
-				return nil, err
-			}
-			defer imgFile.Close()
-
-			var img image.Image
-			if img, _, err = image.Decode(imgFile); err != nil {
-				return nil, err
-			}
-
-			rgba = image.NewRGBA(img.Bounds())
-			if rgba.Stride != rgba.Rect.Size().X*4 {
-				return nil, fmt.Errorf("unsupported stride")
-			}
-			draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+		if HasUVs && png != nil {
+			rgba = png
 		}
 
 		newobj := &Obj{
 			ObjVertices: objVertices,
 			Name:        sub.Name,
 			Bounds:      builder.build(),
-			TexName:     texname,
 			TexImg:      rgba,
 		}
 
