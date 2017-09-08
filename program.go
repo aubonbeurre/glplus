@@ -192,6 +192,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	return p, nil
 }
 
+// GetAttribs ...
 func (p *GPProgram) GetAttribs() (attribs map[string]int) {
 	attribs = make(map[string]int)
 	for _, attr := range p.attribs {
