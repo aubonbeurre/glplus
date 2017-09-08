@@ -44,9 +44,8 @@ void main(){
   #ifdef GL_ES
   precision mediump float;
   #endif
-  in vec4 out_pos;
-  in vec2 out_uvs;
-  out vec4 colourOut;
+  VARYINGIN vec2 out_uvs;
+  COLOROUT
 
   void main(){
     vec2 st = out_uvs;
@@ -62,15 +61,14 @@ void main(){
     float intensity2 = 1.0-smoothstep(0.0,1.180,d);
     vec4 col1 = intensity * vec4(0.286,0.669,0.800,1.000);
     vec4 col2 = intensity2 * vec4(0.291,0.212,1.000,1.000);
-    colourOut = mix(col1, col2, col2.a);
+    FRAGCOLOR = mix(col1, col2, col2.a);
   }
   `
 	// vertex shader
 	vertShaderButton = `#version 330
-  in vec4 position;
-  in vec2 uvs;
-  out vec4 out_pos;
-  out vec2 out_uvs;
+  ATTRIBUTE vec4 position;
+  ATTRIBUTE vec2 uvs;
+  VARYINGOUT vec2 out_uvs;
   uniform mat3 ModelviewMatrix;
   void main()
   {

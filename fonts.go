@@ -19,26 +19,25 @@ import (
 var (
 	// fragment shader
 	fragShaderFont = `#version 330
-  in vec4 out_pos;
-  in vec2 out_uvs;
-  out vec4 colourOut;
+  VARYINGIN vec2 out_uvs;
   uniform sampler2D tex1;
   uniform vec4 color;
   uniform vec4 bg;
+	COLOROUT
+
   void main()
   {
-    vec4 col0 = texture(tex1, out_uvs);
-    colourOut = col0.r * color;
+    vec4 col0 = TEXTURE2D(tex1, out_uvs);
+    FRAGCOLOR = col0.r * color;
     // Porter duff gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    colourOut = vec4(colourOut.r + bg.r * (1-colourOut.a), colourOut.g + bg.g * (1-colourOut.a), colourOut.b + bg.b * (1-colourOut.a), colourOut.a + bg.a * (1-colourOut.a));
+    FRAGCOLOR = vec4(FRAGCOLOR.r + bg.r * (1-FRAGCOLOR.a), FRAGCOLOR.g + bg.g * (1-FRAGCOLOR.a), FRAGCOLOR.b + bg.b * (1-FRAGCOLOR.a), FRAGCOLOR.a + bg.a * (1-FRAGCOLOR.a));
   }`
 
 	// vertex shader
 	vertShaderFont = `#version 330
-  in vec4 position;
-  in vec2 uvs;
-  out vec4 out_pos;
-  out vec2 out_uvs;
+  ATTRIBUTE vec4 position;
+  ATTRIBUTE vec2 uvs;
+  VARYINGOUT vec2 out_uvs;
   uniform mat3 ModelviewMatrix;
   void main()
   {

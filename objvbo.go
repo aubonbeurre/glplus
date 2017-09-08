@@ -8,14 +8,15 @@ import (
 
 var (
 	sVertShaderObj = `#version 330
-  in vec3 position;
-  in vec2 uvs;
-  in vec3 normal;
-  out vec2 out_uvs;
-  out vec3 out_normal;
+  ATTRIBUTE vec3 position;
+  ATTRIBUTE vec2 uvs;
+  ATTRIBUTE vec3 normal;
+  VARYINGOUT vec2 out_uvs;
+  VARYINGOUT vec3 out_normal;
   uniform mat4 projection;
   uniform mat4 camera;
   uniform mat4 model;
+
   void main()
   {
       gl_Position = projection * camera * model * vec4(position, 1);
@@ -26,14 +27,14 @@ var (
 	sFragShaderObj = `#version 330
   uniform vec4 color1;
   uniform vec3 light;
-  in vec2 out_uvs;
-  in vec3 out_normal;
-  out vec4 colourOut;
+  VARYINGIN vec2 out_uvs;
+  VARYINGIN vec3 out_normal;
+  COLOROUT
 
   void main(void)
   {
   	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1);
-  	colourOut = color1 * cosTheta;
+  	FRAGCOLOR = color1 * cosTheta;
   }`
 
 	sFragShaderObjTex = `#version 330
@@ -41,19 +42,18 @@ var (
   uniform vec3 light;
 	uniform sampler2D tex1;
 	uniform mat3 matuv;
-
-  in vec2 out_uvs;
-  in vec3 out_normal;
-  out vec4 colourOut;
+  VARYINGIN vec2 out_uvs;
+  VARYINGIN vec3 out_normal;
+  COLOROUT
 
   void main(void)
   {
 		vec2 new_uvs = vec2(1-out_uvs.x, out_uvs.y);
 		new_uvs = (matuv * vec3(new_uvs, 1)).xy;
-		vec4 texcolor = texture(tex1, new_uvs);
+		vec4 texcolor = TEXTURE2D(tex1, new_uvs);
   	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1);
-		colourOut = mix(color1, texcolor, texcolor.w);
-  	colourOut = colourOut * cosTheta;
+		FRAGCOLOR = mix(color1, texcolor, texcolor.w);
+  	FRAGCOLOR = FRAGCOLOR * cosTheta;
   }`
 )
 
