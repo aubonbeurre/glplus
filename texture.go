@@ -8,44 +8,44 @@ import (
 	"os"
 )
 
-// Texture ...
-type Texture struct {
-	texture *ENGOGLTexture
+// GPTexture ...
+type GPTexture struct {
+	texture *Texture
 	Size    image.Point
 }
 
 // GenTexture ...
-func GenTexture(size image.Point) (texture *Texture) {
-	texture = &Texture{texture: Gl.CreateTexture(), Size: size}
+func GenTexture(size image.Point) (texture *GPTexture) {
+	texture = &GPTexture{texture: Gl.CreateTexture(), Size: size}
 	return texture
 }
 
 // Handle ...
-func (t *Texture) Handle() *ENGOGLTexture {
+func (t *GPTexture) Handle() *Texture {
 	return t.texture
 }
 
 // DeleteTexture ...
-func (t *Texture) DeleteTexture() {
+func (t *GPTexture) DeleteTexture() {
 	if t.texture != nil {
 		Gl.DeleteTexture(t.texture)
 	}
 }
 
 // BindTexture ...
-func (t *Texture) BindTexture(unit int) {
+func (t *GPTexture) BindTexture(unit int) {
 	Gl.ActiveTexture(Gl.TEXTURE0 + unit)
 	Gl.BindTexture(Gl.TEXTURE_2D, t.texture)
 }
 
 // UnbindTexture ...
-func (t *Texture) UnbindTexture(unit int) {
+func (t *GPTexture) UnbindTexture(unit int) {
 	Gl.ActiveTexture(Gl.TEXTURE0 + unit)
 	Gl.BindTexture(Gl.TEXTURE_2D, nil)
 }
 
 // NewRGBATexture ...
-func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *Texture, err error) {
+func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *GPTexture, err error) {
 	if rgba.Stride != rgba.Rect.Size().X*4 {
 		return nil, fmt.Errorf("unsupported stride")
 	}
@@ -82,7 +82,7 @@ func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *Texture, er
 }
 
 // LoadTexture ...
-func LoadTexture(file string, linear, repeat bool) (texture *Texture, img image.Image, err error) {
+func LoadTexture(file string, linear, repeat bool) (texture *GPTexture, img image.Image, err error) {
 	var imgFile *os.File
 	if imgFile, err = os.Open(file); err != nil {
 		return nil, img, err

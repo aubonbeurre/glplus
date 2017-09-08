@@ -188,7 +188,7 @@ func (s *String) createVertexBuffer(f *Font) {
 
 // Font ...
 type Font struct {
-	texture   *Texture
+	texture   *GPTexture
 	program   *GPProgram
 	rows      int
 	cellssize int

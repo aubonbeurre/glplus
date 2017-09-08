@@ -11,29 +11,29 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
-// ENGOGLTexture one day my become gl. from "engo.io/gl"
-type ENGOGLTexture struct{ uint32 }
+// Texture one day my become gl. from "engo.io/gl"
+type Texture struct{ uint32 }
 
-// ENGOGLBuffer ...
-type ENGOGLBuffer struct{ uint32 }
+// Buffer ...
+type Buffer struct{ uint32 }
 
-// ENGOGLFrameBuffer ...
-type ENGOGLFrameBuffer struct{ uint32 }
+// FrameBuffer ...
+type FrameBuffer struct{ uint32 }
 
-// ENGOGLRenderBuffer ...
-type ENGOGLRenderBuffer struct{ uint32 }
+// RenderBuffer ...
+type RenderBuffer struct{ uint32 }
 
-// ENGOGLProgram ...
-type ENGOGLProgram struct{ uint32 }
+// Program ...
+type Program struct{ uint32 }
 
-// ENGOGLUniformLocation ...
-type ENGOGLUniformLocation struct{ int32 }
+// UniformLocation ...
+type UniformLocation struct{ int32 }
 
-// ENGOGLShader ...
-type ENGOGLShader struct{ uint32 }
+// Shader ...
+type Shader struct{ uint32 }
 
-// ENGOGLVertexArray ...
-type ENGOGLVertexArray struct{ uint32 }
+// VertexArray ...
+type VertexArray struct{ uint32 }
 
 type Context struct {
 	ARRAY_BUFFER                                 int
@@ -650,11 +650,11 @@ func (c *Context) Ptr(data interface{}) unsafe.Pointer {
 	return gl.Ptr(data)
 }
 
-func (c *Context) DeleteProgram(program *ENGOGLProgram) {
+func (c *Context) DeleteProgram(program *Program) {
 	gl.DeleteProgram(program.uint32)
 }
 
-func (c *Context) GetProgramInfoLog(program *ENGOGLProgram) string {
+func (c *Context) GetProgramInfoLog(program *Program) string {
 	var maxLength int32
 	gl.GetProgramiv(program.uint32, gl.INFO_LOG_LENGTH, &maxLength)
 
@@ -664,7 +664,7 @@ func (c *Context) GetProgramInfoLog(program *ENGOGLProgram) string {
 	return string(errorLog)
 }
 
-func (c *Context) ValidateProgram(program *ENGOGLProgram) {
+func (c *Context) ValidateProgram(program *Program) {
 	if program == nil {
 		gl.ValidateProgram(0)
 		return
@@ -672,31 +672,31 @@ func (c *Context) ValidateProgram(program *ENGOGLProgram) {
 	gl.ValidateProgram(program.uint32)
 }
 
-func (c *Context) GetProgramParameterb(program *ENGOGLProgram, pname int) bool {
+func (c *Context) GetProgramParameterb(program *Program, pname int) bool {
 	var success int32 = gl.FALSE
 	gl.GetProgramiv(program.uint32, uint32(pname), &success)
 	return success == gl.TRUE
 }
 
-func (c *Context) GetProgramParameteri(program *ENGOGLProgram, pname int) int {
+func (c *Context) GetProgramParameteri(program *Program, pname int) int {
 	var success int32 = gl.FALSE
 	gl.GetProgramiv(program.uint32, uint32(pname), &success)
 	return int(success)
 }
 
-func (c *Context) LinkProgram(program *ENGOGLProgram) {
+func (c *Context) LinkProgram(program *Program) {
 	gl.LinkProgram(program.uint32)
 }
 
-func (c *Context) GetUniformLocation(program *ENGOGLProgram, name string) *ENGOGLUniformLocation {
-	return &ENGOGLUniformLocation{gl.GetUniformLocation(program.uint32, gl.Str(name+"\x00"))}
+func (c *Context) GetUniformLocation(program *Program, name string) *UniformLocation {
+	return &UniformLocation{gl.GetUniformLocation(program.uint32, gl.Str(name+"\x00"))}
 }
 
-func (c *Context) GetAttribLocation(program *ENGOGLProgram, name string) int {
+func (c *Context) GetAttribLocation(program *Program, name string) int {
 	return int(gl.GetAttribLocation(program.uint32, gl.Str(name+"\x00")))
 }
 
-func (c *Context) UseProgram(program *ENGOGLProgram) {
+func (c *Context) UseProgram(program *Program) {
 	if program == nil {
 		gl.UseProgram(0)
 		return
@@ -704,28 +704,28 @@ func (c *Context) UseProgram(program *ENGOGLProgram) {
 	gl.UseProgram(program.uint32)
 }
 
-func (c *Context) Uniform1f(location *ENGOGLUniformLocation, x float32) {
+func (c *Context) Uniform1f(location *UniformLocation, x float32) {
 	gl.Uniform1f(location.int32, x)
 }
 
 // Assigns a integer value to a uniform variable for the current program object.
-func (c *Context) Uniform1i(location *ENGOGLUniformLocation, x int) {
+func (c *Context) Uniform1i(location *UniformLocation, x int) {
 	gl.Uniform1i(location.int32, int32(x))
 }
 
-func (c *Context) Uniform2f(location *ENGOGLUniformLocation, x, y float32) {
+func (c *Context) Uniform2f(location *UniformLocation, x, y float32) {
 	gl.Uniform2f(location.int32, x, y)
 }
 
-func (c *Context) Uniform3f(location *ENGOGLUniformLocation, x, y, z float32) {
+func (c *Context) Uniform3f(location *UniformLocation, x, y, z float32) {
 	gl.Uniform3f(location.int32, x, y, z)
 }
 
-func (c *Context) Uniform4f(location *ENGOGLUniformLocation, x, y, z, w float32) {
+func (c *Context) Uniform4f(location *UniformLocation, x, y, z, w float32) {
 	gl.Uniform4f(location.int32, x, y, z, w)
 }
 
-func (c *Context) UniformMatrix3fv(location *ENGOGLUniformLocation, transpose bool, value []float32) {
+func (c *Context) UniformMatrix3fv(location *UniformLocation, transpose bool, value []float32) {
 	// TODO: count value of 1 is currently hardcoded.
 	//       Perhaps it should be len(value) / 16 or something else?
 	//       In OpenGL 2.1 it is a manually supplied parameter, but WebGL does not have it.
@@ -733,7 +733,7 @@ func (c *Context) UniformMatrix3fv(location *ENGOGLUniformLocation, transpose bo
 	gl.UniformMatrix3fv(location.int32, 1, transpose, &value[0])
 }
 
-func (c *Context) UniformMatrix4fv(location *ENGOGLUniformLocation, transpose bool, value []float32) {
+func (c *Context) UniformMatrix4fv(location *UniformLocation, transpose bool, value []float32) {
 	// TODO: count value of 1 is currently hardcoded.
 	//       Perhaps it should be len(value) / 16 or something else?
 	//       In OpenGL 2.1 it is a manually supplied parameter, but WebGL does not have it.
@@ -741,36 +741,36 @@ func (c *Context) UniformMatrix4fv(location *ENGOGLUniformLocation, transpose bo
 	gl.UniformMatrix4fv(location.int32, 1, transpose, &value[0])
 }
 
-func (c *Context) CreateProgram() *ENGOGLProgram {
-	return &ENGOGLProgram{gl.CreateProgram()}
+func (c *Context) CreateProgram() *Program {
+	return &Program{gl.CreateProgram()}
 }
 
-func (c *Context) AttachShader(program *ENGOGLProgram, shader *ENGOGLShader) {
+func (c *Context) AttachShader(program *Program, shader *Shader) {
 	gl.AttachShader(program.uint32, shader.uint32)
 }
 
-func (c *Context) CreateShader(typ int) *ENGOGLShader {
-	shader := &ENGOGLShader{gl.CreateShader(uint32(typ))}
+func (c *Context) CreateShader(typ int) *Shader {
+	shader := &Shader{gl.CreateShader(uint32(typ))}
 	return shader
 }
 
-func (c *Context) ShaderSource(shader *ENGOGLShader, source string) {
+func (c *Context) ShaderSource(shader *Shader, source string) {
 	glsource, free := gl.Strs(source + "\x00")
 	gl.ShaderSource(shader.uint32, 1, glsource, nil)
 	free()
 }
 
-func (c *Context) CompileShader(shader *ENGOGLShader) {
+func (c *Context) CompileShader(shader *Shader) {
 	gl.CompileShader(shader.uint32)
 }
 
-func (c *Context) GetShaderiv(shader *ENGOGLShader, pname uint32) bool {
+func (c *Context) GetShaderiv(shader *Shader, pname uint32) bool {
 	var success int32
 	gl.GetShaderiv(shader.uint32, pname, &success)
 	return success == int32(gl.TRUE)
 }
 
-func (c *Context) GetShaderInfoLog(shader *ENGOGLShader) string {
+func (c *Context) GetShaderInfoLog(shader *Shader) string {
 	var maxLength int32
 	gl.GetShaderiv(shader.uint32, gl.INFO_LOG_LENGTH, &maxLength)
 
@@ -780,33 +780,33 @@ func (c *Context) GetShaderInfoLog(shader *ENGOGLShader) string {
 	return string(errorLog)
 }
 
-func (c *Context) BindAttribLocation(program *ENGOGLProgram, index int, name string) {
+func (c *Context) BindAttribLocation(program *Program, index int, name string) {
 	gl.BindAttribLocation(program.uint32, uint32(index), gl.Str(name+"\x00"))
 }
 
-func (c *Context) DeleteShader(shader *ENGOGLShader) {
+func (c *Context) DeleteShader(shader *Shader) {
 	gl.DeleteShader(shader.uint32)
 }
 
-func (c *Context) DeleteTexture(texture *ENGOGLTexture) {
+func (c *Context) DeleteTexture(texture *Texture) {
 	gl.DeleteTextures(1, &[]uint32{texture.uint32}[0])
 }
 
-func (c *Context) DeleteBuffer(buffer *ENGOGLBuffer) {
+func (c *Context) DeleteBuffer(buffer *Buffer) {
 	gl.DeleteBuffers(1, &[]uint32{buffer.uint32}[0])
 }
 
-func (c *Context) DeleteVertexArray(vao *ENGOGLVertexArray) {
+func (c *Context) DeleteVertexArray(vao *VertexArray) {
 	gl.DeleteVertexArrays(1, &[]uint32{vao.uint32}[0])
 }
 
-func (c *Context) CreateVertexArray() *ENGOGLVertexArray {
+func (c *Context) CreateVertexArray() *VertexArray {
 	var loc uint32
 	gl.GenVertexArrays(1, &loc)
-	return &ENGOGLVertexArray{loc}
+	return &VertexArray{loc}
 }
 
-func (c *Context) BindVertexArray(vao *ENGOGLVertexArray) {
+func (c *Context) BindVertexArray(vao *VertexArray) {
 	if vao == nil {
 		gl.BindVertexArray(0)
 		return
@@ -842,13 +842,13 @@ func (c *Context) BlendEquation(mode int) {
 	gl.BlendEquation(uint32(mode))
 }
 
-func (c *Context) CreateBuffer() *ENGOGLBuffer {
+func (c *Context) CreateBuffer() *Buffer {
 	var loc uint32
 	gl.GenBuffers(1, &loc)
-	return &ENGOGLBuffer{loc}
+	return &Buffer{loc}
 }
 
-func (c *Context) BindBuffer(target int, buffer *ENGOGLBuffer) {
+func (c *Context) BindBuffer(target int, buffer *Buffer) {
 	if buffer == nil {
 		gl.BindBuffer(uint32(target), 0)
 		return
@@ -877,13 +877,13 @@ func (c *Context) Viewport(x, y, width, height int) {
 	gl.Viewport(int32(x), int32(y), int32(width), int32(height))
 }
 
-func (c *Context) CreateTexture() *ENGOGLTexture {
+func (c *Context) CreateTexture() *Texture {
 	var loc uint32
 	gl.GenTextures(1, &loc)
-	return &ENGOGLTexture{loc}
+	return &Texture{loc}
 }
 
-func (c *Context) BindTexture(target int, texture *ENGOGLTexture) {
+func (c *Context) BindTexture(target int, texture *Texture) {
 	if texture == nil {
 		gl.BindTexture(uint32(target), 0)
 		return
@@ -903,17 +903,17 @@ func (c *Context) TexImage2D(target, level, internalFormat, width, height, forma
 	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), pixels)
 }
 
-func (c *Context) DeleteRenderBuffer(vao *ENGOGLRenderBuffer) {
+func (c *Context) DeleteRenderBuffer(vao *RenderBuffer) {
 	gl.DeleteRenderbuffers(1, &[]uint32{vao.uint32}[0])
 }
 
-func (c *Context) CreateRenderBuffer() *ENGOGLRenderBuffer {
+func (c *Context) CreateRenderBuffer() *RenderBuffer {
 	var loc uint32
 	gl.GenRenderbuffers(1, &loc)
-	return &ENGOGLRenderBuffer{loc}
+	return &RenderBuffer{loc}
 }
 
-func (c *Context) BindRenderBuffer(target int, vao *ENGOGLRenderBuffer) {
+func (c *Context) BindRenderBuffer(target int, vao *RenderBuffer) {
 	if vao == nil {
 		gl.BindRenderbuffer(uint32(target), 0)
 		return
@@ -921,17 +921,17 @@ func (c *Context) BindRenderBuffer(target int, vao *ENGOGLRenderBuffer) {
 	gl.BindRenderbuffer(uint32(target), vao.uint32)
 }
 
-func (c *Context) DeleteFrameBuffer(vao *ENGOGLFrameBuffer) {
+func (c *Context) DeleteFrameBuffer(vao *FrameBuffer) {
 	gl.DeleteFramebuffers(1, &[]uint32{vao.uint32}[0])
 }
 
-func (c *Context) CreateFrameBuffer() *ENGOGLFrameBuffer {
+func (c *Context) CreateFrameBuffer() *FrameBuffer {
 	var loc uint32
 	gl.GenFramebuffers(1, &loc)
-	return &ENGOGLFrameBuffer{loc}
+	return &FrameBuffer{loc}
 }
 
-func (c *Context) BindFrameBuffer(target int, vao *ENGOGLFrameBuffer) {
+func (c *Context) BindFrameBuffer(target int, vao *FrameBuffer) {
 	if vao == nil {
 		gl.BindFramebuffer(uint32(target), 0)
 		return
@@ -939,7 +939,7 @@ func (c *Context) BindFrameBuffer(target int, vao *ENGOGLFrameBuffer) {
 	gl.BindFramebuffer(uint32(target), vao.uint32)
 }
 
-func (c *Context) FramebufferRenderbuffer(target, attachment, renderbuffertarget int, renderbuffer *ENGOGLRenderBuffer) {
+func (c *Context) FramebufferRenderbuffer(target, attachment, renderbuffertarget int, renderbuffer *RenderBuffer) {
 	gl.FramebufferRenderbuffer(uint32(target), uint32(attachment), uint32(renderbuffertarget), renderbuffer.uint32)
 }
 
@@ -951,7 +951,7 @@ func (c *Context) RenderbufferStorage(target, internalFormat, width, height int)
 	gl.RenderbufferStorage(uint32(target), uint32(internalFormat), int32(width), int32(height))
 }
 
-func (c *Context) FramebufferTexture2D(target, attachment, textarget int, texture *ENGOGLTexture, level int) {
+func (c *Context) FramebufferTexture2D(target, attachment, textarget int, texture *Texture, level int) {
 	gl.FramebufferTexture2D(uint32(target), uint32(attachment), uint32(textarget), uint32(texture.uint32), int32(level))
 }
 

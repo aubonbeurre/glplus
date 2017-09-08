@@ -21,9 +21,9 @@ func DefaultVBOOptions() VBOOptions {
 
 // VBO ...
 type VBO struct {
-	vao        *ENGOGLVertexArray
-	vboVerts   *ENGOGLBuffer
-	vboIndices *ENGOGLBuffer
+	vao        *VertexArray
+	vboVerts   *Buffer
+	vboIndices *Buffer
 	numElem    int
 	isShort    bool
 
@@ -172,13 +172,13 @@ func (v *VBO) load(prog *GPProgram, verts []float32, indices []uint32) {
 // NewVBO ...
 func NewVBO(prog *GPProgram, options VBOOptions, verts []float32, indices []uint32) (vbo *VBO) {
 	// create and bind the required VAO object
-	var vao *ENGOGLVertexArray
+	var vao *VertexArray
 	vao = Gl.CreateVertexArray()
 	Gl.BindVertexArray(vao)
 
 	// create a VBO to hold the vertex data
-	var vboVerts *ENGOGLBuffer
-	var vboIndices *ENGOGLBuffer
+	var vboVerts *Buffer
+	var vboIndices *Buffer
 	vboVerts = Gl.CreateBuffer()
 	if indices != nil {
 		vboIndices = Gl.CreateBuffer()

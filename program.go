@@ -8,9 +8,9 @@ import (
 
 // GPProgram ...
 type GPProgram struct {
-	prog *ENGOGLProgram
+	prog *Program
 
-	uniforms map[string]*ENGOGLUniformLocation
+	uniforms map[string]*UniformLocation
 	attribs  []string
 }
 
@@ -35,8 +35,8 @@ func (p *GPProgram) ValidateProgram() error {
 }
 
 // GetUniformLocation ...
-func (p *GPProgram) GetUniformLocation(s string) *ENGOGLUniformLocation {
-	var res *ENGOGLUniformLocation
+func (p *GPProgram) GetUniformLocation(s string) *UniformLocation {
+	var res *UniformLocation
 	var ok bool
 	if res, ok = p.uniforms[s]; ok {
 		return res
@@ -105,12 +105,12 @@ func (p *GPProgram) ProgramUniformMatrix3fv(uniform string, matrix [9]float32) {
 }
 
 // GetShaderInfoLog ...
-func GetShaderInfoLog(shader *ENGOGLShader) string {
+func GetShaderInfoLog(shader *Shader) string {
 	return Gl.GetShaderInfoLog(shader)
 }
 
 // ShaderSource ...
-func ShaderSource(shader *ENGOGLShader, src string) {
+func ShaderSource(shader *Shader, src string) {
 	Gl.ShaderSource(shader, src)
 }
 
@@ -120,7 +120,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	var prog = Gl.CreateProgram()
 	var p = &GPProgram{
 		prog:     prog,
-		uniforms: make(map[string]*ENGOGLUniformLocation),
+		uniforms: make(map[string]*UniformLocation),
 		attribs:  attribs,
 	}
 

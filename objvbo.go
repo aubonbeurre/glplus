@@ -63,7 +63,7 @@ type ObjRender struct {
 
 	progCoord *GPProgram
 	vbo       *VBO
-	tex       *Texture
+	tex       *GPTexture
 }
 
 // ObjsRender ...

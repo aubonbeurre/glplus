@@ -9,11 +9,11 @@ import (
 
 // RenderTarget ...
 type RenderTarget struct {
-	fbuffer  *ENGOGLFrameBuffer
-	rbuffer  *ENGOGLRenderBuffer
-	zbuffer  *ENGOGLRenderBuffer
+	fbuffer  *FrameBuffer
+	rbuffer  *RenderBuffer
+	zbuffer  *RenderBuffer
 	hasDepth bool
-	Tex      *Texture
+	Tex      *GPTexture
 }
 
 // Delete ...
@@ -77,7 +77,7 @@ func checkFramebufferStatus() string {
 }
 
 // Bind ...
-func (r *RenderTarget) Bind(tex *Texture) {
+func (r *RenderTarget) Bind(tex *GPTexture) {
 	// Bind the frame-buffer object and attach to it a render-buffer object set up as a depth-buffer.
 	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, r.fbuffer)
 
@@ -99,7 +99,7 @@ func (r *RenderTarget) Bind(tex *Texture) {
 }
 
 // Unbind ...
-func (r *RenderTarget) Unbind(tex *Texture) {
+func (r *RenderTarget) Unbind(tex *GPTexture) {
 	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, nil)
 	Gl.Flush()
 }
@@ -125,7 +125,7 @@ func (r *RenderTarget) ReadBuffer(w, h int) (newImage *image.RGBA) {
 // NewRenderTarget ...
 func NewRenderTarget(hasDepth bool) (r *RenderTarget) {
 	const msaa = 4
-	var rbuffer, zbuffer *ENGOGLRenderBuffer
+	var rbuffer, zbuffer *RenderBuffer
 	//now create the color render buffer
 	rbuffer = Gl.CreateRenderBuffer()
 	Gl.BindRenderBuffer(Gl.RENDERBUFFER, rbuffer)
@@ -137,7 +137,7 @@ func NewRenderTarget(hasDepth bool) (r *RenderTarget) {
 		//Gl.RenderbufferStorageMultisample(Gl.RENDERBUFFER, msaa, GL_DEPTH_COMPONENT, width, height);
 	}
 
-	var fbuffer *ENGOGLFrameBuffer
+	var fbuffer *FrameBuffer
 	//create the color buffer to render to
 	fbuffer = Gl.CreateFrameBuffer()
 	Gl.BindFrameBuffer(Gl.FRAMEBUFFER, fbuffer)
