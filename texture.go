@@ -75,7 +75,7 @@ func NewRGBATexture(rgba *image.RGBA, linear, repeat bool) (texture *GPTexture, 
 		rgba.Rect.Size().Y,
 		Gl.RGBA,
 		Gl.UNSIGNED_BYTE,
-		Gl.Ptr(rgba.Pix))
+		rgba.Pix)
 	texture.UnbindTexture(0)
 
 	return texture, nil

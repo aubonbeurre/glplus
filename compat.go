@@ -3,6 +3,7 @@
 package glplus
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"unsafe"
@@ -635,9 +636,6 @@ func NewContext() *Context {
 	}
 }
 
-// Gl may become engo.Gl (Gl = glplus.NewContext())
-var Gl *Context
-
 func (c *Context) Version() string {
 	return gl.GoStr(gl.GetString(gl.VERSION))
 }
@@ -899,8 +897,17 @@ func (c *Context) TexParameteri(target int, pname int, param int) {
 	gl.TexParameteri(uint32(target), uint32(pname), int32(param))
 }
 
-func (c *Context) TexImage2D(target, level, internalFormat, width, height, format, kind int, pixels unsafe.Pointer) {
-	gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), pixels)
+func (c *Context) TexImage2D(target, level, internalFormat, width, height, format, kind int, data interface{}) {
+	if data == nil {
+		gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), nil)
+		return
+	}
+	switch t := data.(type) {
+	case []uint8, []float32:
+		gl.TexImage2D(uint32(target), int32(level), int32(internalFormat), int32(width), int32(height), int32(0), uint32(format), uint32(kind), gl.Ptr(t))
+	default:
+		panic(fmt.Errorf("TexImage2D Unknown type %v", t))
+	}
 }
 
 func (c *Context) DeleteRenderBuffer(vao *RenderBuffer) {

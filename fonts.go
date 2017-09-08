@@ -318,7 +318,7 @@ func NewFont(fontName string) (font *Font, err error) {
 		gray.Rect.Size().Y,
 		Gl.RED,
 		Gl.UNSIGNED_BYTE,
-		Gl.Ptr(gray.Pix))
+		gray.Pix)
 
 	font = &Font{
 		texture:   texture,
