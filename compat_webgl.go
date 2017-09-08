@@ -352,7 +352,9 @@ type Context struct {
 	ZERO                                         int    `js:"ZERO"`
 	TRUE                                         int    `js:"TRUE"`
 	R8                                           int    `js:"R8"`
-	RED                                          int    `js:"RED"`
+	RED                                          int    `js:"RGBA32F"`
+	RGBA32F                                      int    `js:"R32F"`
+	R32F                                         int    `js:"RED"`
 }
 
 // NewContext takes an HTML5 canvas object and optional context attributes.
