@@ -30,7 +30,7 @@ var (
     vec4 col0 = TEXTURE2D(tex1, out_uvs);
     FRAGCOLOR = col0.r * color;
     // Porter duff gl.ONE, gl.ONE_MINUS_SRC_ALPHA
-    FRAGCOLOR = vec4(FRAGCOLOR.r + bg.r * (1-FRAGCOLOR.a), FRAGCOLOR.g + bg.g * (1-FRAGCOLOR.a), FRAGCOLOR.b + bg.b * (1-FRAGCOLOR.a), FRAGCOLOR.a + bg.a * (1-FRAGCOLOR.a));
+    FRAGCOLOR = vec4(FRAGCOLOR.r + bg.r * (1.0-FRAGCOLOR.a), FRAGCOLOR.g + bg.g * (1.0-FRAGCOLOR.a), FRAGCOLOR.b + bg.b * (1.0-FRAGCOLOR.a), FRAGCOLOR.a + bg.a * (1-FRAGCOLOR.a));
   }`
 
 	// vertex shader

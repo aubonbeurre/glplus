@@ -30,7 +30,7 @@ var (
 
   void main(void)
   {
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1);
+  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
   	FRAGCOLOR = color1 * cosTheta;
   }`
 )

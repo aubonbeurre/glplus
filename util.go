@@ -5,9 +5,6 @@ import "sync/atomic"
 // Gl may become engo.Gl (Gl = glplus.NewContext())
 var Gl *Context
 
-// Ogl2ShaderCompat ...
-var Ogl2ShaderCompat = false
-
 // ReferenceCountable ...
 type ReferenceCountable interface {
 	Decr() bool

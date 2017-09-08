@@ -19,9 +19,9 @@ var (
 
   void main()
   {
-      gl_Position = projection * camera * model * vec4(position, 1);
+      gl_Position = projection * camera * model * vec4(position, 1.0);
       out_uvs = uvs;
-      out_normal = normalize(model * vec4(normal, 0)).xyz;
+      out_normal = normalize(model * vec4(normal, 0.0)).xyz;
   }`
 
 	sFragShaderObj = `#version 330
@@ -33,7 +33,7 @@ var (
 
   void main(void)
   {
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1);
+  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
   	FRAGCOLOR = color1 * cosTheta;
   }`
 
@@ -48,10 +48,10 @@ var (
 
   void main(void)
   {
-		vec2 new_uvs = vec2(1-out_uvs.x, out_uvs.y);
+		vec2 new_uvs = vec2(1.0-out_uvs.x, out_uvs.y);
 		new_uvs = (matuv * vec3(new_uvs, 1)).xy;
 		vec4 texcolor = TEXTURE2D(tex1, new_uvs);
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1);
+  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
 		FRAGCOLOR = mix(color1, texcolor, texcolor.w);
   	FRAGCOLOR = FRAGCOLOR * cosTheta;
   }`
