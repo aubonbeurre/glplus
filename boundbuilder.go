@@ -61,3 +61,9 @@ func (r *BoundBuilder) include64(x, y, z float64) {
 func (b Bounds) Center() mgl32.Vec3 {
 	return mgl32.Vec3{float32(b.X.Center()), float32(b.Y.Center()), float32(b.Z.Center())}
 }
+
+// Length ...
+func (b Bounds) Length() float32 {
+	length := math.Max(b.X.Length(), b.Y.Length())
+	return float32(math.Max(length, b.Z.Length()))
+}

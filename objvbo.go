@@ -86,9 +86,8 @@ func (m *ObjsRender) Bounds() (b Bounds) {
 // NormalizedMat ...
 func (m *ObjsRender) NormalizedMat() (mres mgl32.Mat4) {
 	center := m.Bounds().Center()
-	length := math.Max(m.Bounds().X.Length(), m.Bounds().Y.Length())
-	length = math.Max(length, m.Bounds().Z.Length())
-	scale := float32(1 / length)
+	length := m.Bounds().Length()
+	scale := 1 / length
 
 	mres = mgl32.HomogRotate3DX(-math.Pi / 2)
 	mres = mres.Mul4(mgl32.Scale3D(scale, scale, scale))
@@ -165,9 +164,8 @@ func (m *ObjRender) Delete() {
 // NormalizedMat ...
 func (m *ObjRender) NormalizedMat() (mres mgl32.Mat4) {
 	center := m.Obj.Bounds.Center()
-	length := math.Max(m.Obj.Bounds.X.Length(), m.Obj.Bounds.Y.Length())
-	length = math.Max(length, m.Obj.Bounds.Z.Length())
-	scale := float32(1 / length)
+	length := m.Obj.Bounds.Length()
+	scale := 1 / length
 
 	mres = mgl32.HomogRotate3DX(-math.Pi / 2)
 	mres = mres.Mul4(mgl32.Scale3D(scale, scale, scale))
