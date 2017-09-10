@@ -5,7 +5,9 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"io"
 	"io/ioutil"
+	"os"
 	"path"
 	"runtime"
 
@@ -240,16 +242,22 @@ func (f *Font) NewString(s string) *String {
 	return result
 }
 
-// NewFont ...
-func NewFont(fontName string) (font *Font, err error) {
+// FreeSerif ...
+func FreeSerif() (*os.File, error) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return nil, fmt.Errorf("%s", "No caller information")
 	}
 
+	return os.Open(path.Join(path.Dir(filename), "FreeSerif.ttf"))
+}
+
+// NewFont ...
+func NewFont(reader io.Reader) (font *Font, err error) {
+
 	// Read the font data.
 	var fontBytes []byte
-	if fontBytes, err = ioutil.ReadFile(path.Join(path.Dir(filename), fontName)); err != nil {
+	if fontBytes, err = ioutil.ReadAll(reader); err != nil {
 		return nil, err
 	}
 	var f *truetype.Font

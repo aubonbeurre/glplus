@@ -1,6 +1,7 @@
 package glplus
 
 import (
+	"os"
 	"testing"
 
 	"github.com/go-gl/glfw3/v3.2/glfw"
@@ -41,6 +42,48 @@ func checkGlError(t *testing.T) {
 	}
 }
 
+func subtestRenderFont(t *testing.T) {
+	var err error
+	var fontReader *os.File
+	if fontReader, err = os.Open("FreeSerif.ttf"); err != nil {
+		panic(err)
+	}
+	defer fontReader.Close()
+
+	var font *Font
+	if font, err = NewFont(fontReader); err != nil {
+		panic(err)
+	}
+	defer font.DeleteFont()
+
+	var help1 = font.NewString("1: show only A")
+	defer help1.DeleteString()
+
+	checkGlError(t)
+}
+
+func subtestRenderOBJ(t *testing.T) {
+	var err error
+	var fd *os.File
+	if fd, err = os.Open("windarrow.obj"); err != nil {
+		t.Fatal(err)
+	}
+	defer fd.Close()
+
+	var objs []*Obj
+	if objs, err = LoadObj(fd, nil); err != nil {
+		t.Fatal(err)
+	}
+	objrender := NewObjVBO(objs[0])
+	defer objrender.Delete()
+
+	mat := objrender.NormalizedMat()
+
+	objrender.Draw([4]float32{1, 1, 1, 1}, mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0)
+
+	checkGlError(t)
+}
+
 func subtestRenderVBO(t *testing.T) {
 	var attribsNormal = []string{
 		"position",
@@ -75,10 +118,16 @@ func subtestRenderVBO(t *testing.T) {
 	progCoord.UnuseProgram()
 }
 
-func TestVBO(t *testing.T) {
+func TestAll(t *testing.T) {
+	t.Run("RenderVBO", subtestRenderVBO)
+	t.Run("RenderOBJ", subtestRenderOBJ)
+	//t.Run("RenderFont", subtestRenderFont) TODO: CRASH
+}
+
+func TestMain(m *testing.M) {
 	var err error
 	if err = glfw.Init(); err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	defer glfw.Terminate()
@@ -95,12 +144,13 @@ func TestVBO(t *testing.T) {
 	var window *glfw.Window
 	window, err = glfw.CreateWindow(1024, 768, "test", nil, nil)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
 	window.MakeContextCurrent()
 
 	Gl = NewContext()
 
-	t.Run("RenderVBO", subtestRenderVBO)
+	// call flag.Parse() here if TestMain uses flags
+	os.Exit(m.Run())
 }
