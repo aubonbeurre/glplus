@@ -12,11 +12,17 @@ type GPProgram struct {
 
 	uniforms map[string]*UniformLocation
 	attribs  []string
+	hash     string
 }
 
 // DeleteProgram ...
 func (p *GPProgram) DeleteProgram() {
-	Gl.DeleteProgram(p.prog)
+	if cache := sProgCache[p.hash]; cache != nil {
+		if cache.Decr() {
+			//fmt.Printf("Delete %s\n", p.hash)
+			cache.Delete()
+		}
+	}
 }
 
 // GetProgramInfoLog ...
@@ -116,12 +122,24 @@ func ShaderSource(shader *Shader, src string) {
 
 // LoadShaderProgram ... loads shader objects and then attaches them to a program
 func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (*GPProgram, error) {
+	// query program cache
+	if sProgCache == nil {
+		sProgCache = make(map[string]*ProgramCache)
+	}
+	hash := getMD5Hash(vertShader, fragShader)
+	if cache := sProgCache[hash]; cache != nil {
+		cache.Incr()
+		//fmt.Printf("Hit %s\n", cache.program.hash)
+		return cache.program, nil
+	}
+
 	// create the program
 	var prog = Gl.CreateProgram()
 	var p = &GPProgram{
 		prog:     prog,
 		uniforms: make(map[string]*UniformLocation),
 		attribs:  attribs,
+		hash:     hash,
 	}
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "android" {
@@ -181,6 +199,13 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	Gl.DeleteShader(vs)
 	Gl.DeleteShader(fs)
 
+	// insert in prog cache
+	sProgCache[hash] = &ProgramCache{
+		ReleasingReferenceCount: NewReferenceCount(),
+		program:                 p,
+	}
+
+	//fmt.Printf("Create %s\n", p.hash)
 	return p, nil
 }
 

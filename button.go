@@ -32,19 +32,17 @@ void main(){
    d = length( max(abs(st)-0.392,0.) );
 
   // Drawing with the distance field
-    float intensity = smoothstep(0.444,0.480,d)* smoothstep(0.592,0.548,d);
-    float intensity2 = 1.0-smoothstep(0.0,1.180,d);
-   vec4 col1 = intensity * vec4(0.286,0.669,0.800,1.000);
-    vec4 col2 = intensity2 * vec4(0.291,0.212,1.000,1.000);
-    gl_FragColor = mix(col1, col2, col2.a);
+	float intensity = smoothstep(0.444,0.480,d)* smoothstep(0.592,0.548,d);
+	float intensity2 = 1.0-smoothstep(0.0,1.180,d);
+	vec4 col1 = intensity * vec4(0.286,0.669,0.800,1.000);
+	vec4 col2 = intensity2 * vec4(0.291,0.212,1.000,1.000);
+	gl_FragColor = mix(col1, col2, col2.a);
 }`
 
 	// fragment shader
 	fragShaderButton = `#version 330
-  #ifdef GL_ES
-  precision mediump float;
-  #endif
   VARYINGIN vec2 out_uvs;
+	uniform float animTime;
   COLOROUT
 
   void main(){
@@ -54,7 +52,7 @@ void main(){
     st = st *2.-1.;
 
     // Make the distance field
-    float d = length( max(abs(st)-0.392,0.) );
+    float d = length( max(abs(st)-0.392+animTime,0.) );
 
     // Drawing with the distance field
     float intensity = smoothstep(0.444,0.480,d)* smoothstep(0.592,0.548,d);
@@ -111,7 +109,7 @@ func (b *Button) Delete() {
 }
 
 // Draw ...
-func (b *Button) Draw(color [4]float32, bg [4]float32, mat mgl32.Mat3) (err error) {
+func (b *Button) Draw(color [4]float32, bg [4]float32, animTime float32, mat mgl32.Mat3) (err error) {
 	program := sButtonProgramSingleton.program
 	vbo := sButtonProgramSingleton.vbo
 
@@ -123,12 +121,19 @@ func (b *Button) Draw(color [4]float32, bg [4]float32, mat mgl32.Mat3) (err erro
 	program.ProgramUniformMatrix3fv("ModelviewMatrix", m)
 	program.ProgramUniform4fv("color", color)
 	program.ProgramUniform4fv("bg", bg)
+	program.ProgramUniform1f("animTime", animTime/3)
 
 	if err = program.ValidateProgram(); err != nil {
 		return err
 	}
 
+	Gl.Disable(Gl.DEPTH_TEST)
+	Gl.Enable(Gl.BLEND)
+
 	vbo.Draw()
+
+	Gl.Enable(Gl.DEPTH_TEST)
+	Gl.Disable(Gl.BLEND)
 
 	vbo.Unbind(program)
 	program.UnuseProgram()
