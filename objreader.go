@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/aubonbeurre/go-obj/obj"
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 // SubObject ...
@@ -34,7 +33,7 @@ type Obj struct {
 // ObjOptions ...
 type ObjOptions struct {
 	TexImg *image.RGBA
-	Colors map[string]mgl32.Vec3
+	Colors map[string]float32
 	Single bool
 }
 
@@ -48,16 +47,16 @@ func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 		return nil, err
 	}
 
-	var findColor = func(faceIndex int) mgl32.Vec3 {
+	var findColor = func(faceIndex int) (float32, error) {
 		for _, material := range o.SubMaterials {
 			if faceIndex <= material.FaceEndIndex {
 				if col, ok := opts.Colors[material.Name]; ok {
-					return col
+					return col, nil
 				}
-				panic(fmt.Errorf("Unknown material %s", material.Name))
+				return 0, fmt.Errorf("Unknown material %s", material.Name)
 			}
 		}
-		panic(fmt.Errorf("Unknown error"))
+		return 0, fmt.Errorf("Unknown error")
 	}
 
 	// convert our object into cube vertices for opengl
@@ -68,22 +67,13 @@ func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 		builder.reset()
 		HasUVs := false
 
-		/*var unpackColor = func(f float64) mgl32.Vec3 {
-			var color mgl32.Vec3
-			color[2] = float32(math.Floor(f / 256.0 / 256.0))
-			color[1] = float32(math.Floor((f - float64(color[2])*256.0*256.0) / 256.0))
-			color[0] = float32(math.Floor(f - float64(color[2])*256.0*256.0 - float64(color[1])*256.0))
-			// now we have a vec3 with the 3 components in range [0..255]. Let's normalize it!
-			return color.Mul(1 / 255.0)
-		}*/
-
 		for faceIndex := startFaceIndex; faceIndex < sub.FaceEndIndex; faceIndex++ {
 			f := &o.Faces[faceIndex]
 			var faceColorPacked float32
 			if opts.Colors != nil {
-				faceColor := findColor(faceIndex)
-				faceColorPacked = faceColor[0]*255.0 + faceColor[1]*255.0*256.0 + faceColor[2]*255.0*256.0*256.0
-				//fmt.Printf("%f %v\n", faceColorPacked, unpackColor(float64(faceColorPacked)))
+				if faceColorPacked, err = findColor(faceIndex); err != nil {
+					return nil, err
+				}
 			}
 
 			has4 := len(f.Points) == 4

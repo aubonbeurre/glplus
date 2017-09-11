@@ -1,6 +1,7 @@
 package glplus
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -37,8 +38,8 @@ var (
 )
 
 func checkGlError(t *testing.T) {
-	if Gl.GetError() != Gl.NO_ERROR {
-		t.Fail()
+	if err := Gl.GetError(); err != Gl.NO_ERROR {
+		t.Fatalf("%v", fmt.Errorf("OGL Error %d", err))
 	}
 }
 
@@ -74,10 +75,12 @@ func subtestRenderOBJ(t *testing.T) {
 	if objs, err = LoadObj(fd, &ObjOptions{}); err != nil {
 		t.Fatal(err)
 	}
-	objrender := NewObjVBO(objs[0])
+	objrender := NewObjVBO(objs[0], nil)
 	defer objrender.Delete()
 
 	mat := objrender.NormalizedMat()
+
+	checkGlError(t)
 
 	objrender.Draw([4]float32{1, 1, 1, 1}, mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0)
 

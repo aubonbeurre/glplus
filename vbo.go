@@ -1,6 +1,8 @@
 package glplus
 
-import "math"
+import (
+	"math"
+)
 
 // VBOOptions ...
 type VBOOptions struct {

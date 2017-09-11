@@ -1,6 +1,8 @@
 package glplus
 
 import (
+	"image"
+	"image/color"
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -9,10 +11,10 @@ import (
 var (
 	sVertShaderObj = `#version 330
   ATTRIBUTE vec3 position;
-  ATTRIBUTE float uvs;
-  ATTRIBUTE vec3 normal;
-  VARYINGOUT float out_color;
-  VARYINGOUT vec3 out_normal;
+	ATTRIBUTE float uvs;
+	ATTRIBUTE vec3 normal;
+	VARYINGOUT float out_uvs;
+	VARYINGOUT vec3 out_normal;
   uniform mat4 projection;
   uniform mat4 camera;
   uniform mat4 model;
@@ -20,31 +22,21 @@ var (
   void main()
   {
       gl_Position = projection * camera * model * vec4(position, 1.0);
-      out_color = uvs;
       out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+			out_uvs = uvs;
   }`
 
 	sFragShaderObj = `#version 330
   uniform vec4 color1;
   uniform vec3 light;
-  VARYINGIN float out_color;
-  VARYINGIN vec3 out_normal;
+	VARYINGIN float out_uvs;
+	VARYINGIN vec3 out_normal;
   COLOROUT
-
-	vec3 unpackColor(float f) {
-	    vec3 color;
-	    color.b = floor(f / 256.0 / 256.0);
-	    color.g = floor((f - color.b * 256.0 * 256.0) / 256.0);
-	    color.r = floor(f - color.b * 256.0 * 256.0 - color.g * 256.0);
-	    // now we have a vec3 with the 3 components in range [0..255]. Let's normalize it!
-	    return color / 255.0;
-	}
 
   void main(void)
   {
-		vec3 color = color1.xyz + unpackColor(out_color);
   	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
-  	FRAGCOLOR = vec4(color, 1) * cosTheta;
+  	FRAGCOLOR = color1 * cosTheta;
   }`
 
 	sVertShaderObjTex = `#version 330
@@ -82,15 +74,47 @@ var (
 		FRAGCOLOR = mix(color1, texcolor, texcolor.w);
   	FRAGCOLOR = FRAGCOLOR * cosTheta;
   }`
+
+	sVertShaderObjColorTable = `#version 330
+	ATTRIBUTE vec3 position;
+	ATTRIBUTE float uvs;
+	ATTRIBUTE vec3 normal;
+	VARYINGOUT float out_uvs;
+	VARYINGOUT vec3 out_normal;
+	uniform mat4 projection;
+	uniform mat4 camera;
+	uniform mat4 model;
+
+	void main()
+	{
+			gl_Position = projection * camera * model * vec4(position, 1.0);
+			out_uvs = uvs;
+			out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+	}`
+
+	sFragShaderObjColorTable = `#version 330
+  uniform vec3 light;
+	uniform sampler2D tex1;
+  VARYINGIN float out_uvs;
+  VARYINGIN vec3 out_normal;
+  COLOROUT
+
+  void main(void)
+  {
+		vec4 texcolor = TEXTURE2D(tex1, vec2(out_uvs, 0));
+  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
+  	FRAGCOLOR = texcolor * cosTheta;
+  }`
 )
 
 // ObjRender ...
 type ObjRender struct {
 	Obj *Obj
 
-	progCoord *GPProgram
-	vbo       *VBO
-	tex       *GPTexture
+	progCoord  *GPProgram
+	vbo        *VBO
+	tex        *GPTexture
+	colorTable []mgl32.Vec4
 }
 
 // ObjsRender ...
@@ -137,37 +161,55 @@ func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat
 }
 
 // NewObjsVBO ...
-func NewObjsVBO(objs []*Obj) (m *ObjsRender) {
+func NewObjsVBO(objs []*Obj, colorTable []mgl32.Vec4) (m *ObjsRender) {
 	m = &ObjsRender{}
 	for _, obj := range objs {
-		m.Objs = append(m.Objs, NewObjVBO(obj))
+		m.Objs = append(m.Objs, NewObjVBO(obj, colorTable))
 	}
 	return m
 }
 
 // NewObjVBO ...
-func NewObjVBO(obj *Obj) (m *ObjRender) {
+func NewObjVBO(obj *Obj, colorTable []mgl32.Vec4) (m *ObjRender) {
 	var err error
 
 	m = &ObjRender{
-		Obj: obj,
+		Obj:        obj,
+		colorTable: colorTable,
 	}
 
-	var attribsNormal = []string{
+	var attribs = []string{
 		"position",
 		"uvs",
 		"normal",
 	}
 	if obj.TexImg != nil {
-		if m.progCoord, err = LoadShaderProgram(sVertShaderObjTex, sFragShaderObjTex, attribsNormal); err != nil {
+		if m.progCoord, err = LoadShaderProgram(sVertShaderObjTex, sFragShaderObjTex, attribs); err != nil {
 			panic(err)
 		}
 
 		if m.tex, err = NewRGBATexture(obj.TexImg, true, false); err != nil {
 			panic(err)
 		}
+	} else if colorTable != nil {
+		if m.progCoord, err = LoadShaderProgram(sVertShaderObjColorTable, sFragShaderObjColorTable, attribs); err != nil {
+			panic(err)
+		}
+
+		newm := image.NewRGBA(image.Rect(0, 0, len(colorTable), 1))
+		for i, c := range colorTable {
+			newm.Set(i, 0, color.RGBA{
+				uint8(c.X() * 255.0),
+				uint8(c.Y() * 255.0),
+				uint8(c.Z() * 255.0),
+				uint8(c.W() * 255.0),
+			})
+		}
+		if m.tex, err = NewRGBATexture(newm, false, false); err != nil {
+			panic(err)
+		}
 	} else {
-		if m.progCoord, err = LoadShaderProgram(sVertShaderObj, sFragShaderObj, attribsNormal); err != nil {
+		if m.progCoord, err = LoadShaderProgram(sVertShaderObj, sFragShaderObj, attribs); err != nil {
 			panic(err)
 		}
 	}
@@ -175,7 +217,7 @@ func NewObjVBO(obj *Obj) (m *ObjRender) {
 	opt := DefaultVBOOptions()
 	opt.Normals = 3
 	if obj.TexImg == nil {
-		opt.UV = 1 // packed color
+		opt.UV = 1
 	}
 	m.vbo = NewVBO(m.progCoord, opt, obj.ObjVertices, nil)
 
@@ -224,6 +266,7 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 
 	m.vbo.Bind(m.progCoord)
 	m.progCoord.ProgramUniform4fv("color1", color1)
+
 	var err error
 	if err = m.progCoord.ValidateProgram(); err != nil {
 		panic(err)
