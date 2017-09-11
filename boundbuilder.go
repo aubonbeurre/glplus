@@ -67,3 +67,13 @@ func (b Bounds) Length() float32 {
 	length := math.Max(b.X.Length(), b.Y.Length())
 	return float32(math.Max(length, b.Z.Length()))
 }
+
+// Union ...
+func (b Bounds) Union(o Bounds) Bounds {
+	var build BoundBuilder
+	build.include64(o.X.Lo, o.Y.Lo, o.Z.Lo)
+	build.include64(o.X.Hi, o.Y.Hi, o.Z.Hi)
+	build.include64(b.X.Lo, b.Y.Lo, b.Z.Lo)
+	build.include64(b.X.Hi, b.Y.Hi, b.Z.Hi)
+	return build.build()
+}

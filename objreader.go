@@ -31,9 +31,16 @@ type Obj struct {
 	SubMaterials []SubMaterial
 }
 
+// ObjOptions ...
+type ObjOptions struct {
+	TexImg *image.RGBA
+	Colors map[string]mgl32.Vec3
+	Single bool
+}
+
 // LoadObj ...
 // 'colors' relate to usemtl
-func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs []*Obj, err error) {
+func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 
 	var o *obj.Object
 	o, err = obj.NewReader(f).Read()
@@ -44,7 +51,7 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 	var findColor = func(faceIndex int) mgl32.Vec3 {
 		for _, material := range o.SubMaterials {
 			if faceIndex <= material.FaceEndIndex {
-				if col, ok := colors[material.Name]; ok {
+				if col, ok := opts.Colors[material.Name]; ok {
 					return col
 				}
 				panic(fmt.Errorf("Unknown material %s", material.Name))
@@ -73,7 +80,7 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 		for faceIndex := startFaceIndex; faceIndex < sub.FaceEndIndex; faceIndex++ {
 			f := &o.Faces[faceIndex]
 			var faceColorPacked float32
-			if colors != nil {
+			if opts.Colors != nil {
 				faceColor := findColor(faceIndex)
 				faceColorPacked = faceColor[0]*255.0 + faceColor[1]*255.0*256.0 + faceColor[2]*255.0*256.0*256.0
 				//fmt.Printf("%f %v\n", faceColorPacked, unpackColor(float64(faceColorPacked)))
@@ -94,7 +101,7 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 
 			var u, v [4]float64
 
-			if v1.Texture != nil && png != nil {
+			if v1.Texture != nil && opts.TexImg != nil {
 				HasUVs = true
 				u[0] = v1.Texture.U
 				v[0] = v1.Texture.V
@@ -159,8 +166,8 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 
 		var rgba *image.RGBA
 
-		if HasUVs && png != nil {
-			rgba = png
+		if HasUVs && opts.TexImg != nil {
+			rgba = opts.TexImg
 		}
 
 		subobjects := make([]SubObject, 0)
@@ -186,5 +193,21 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 		startFaceIndex = sub.FaceEndIndex
 		//fmt.Printf("%s, bounds=%v, center=%v, uvs=%v\n", newobj.Name, newobj.Bounds, newobj.Bounds.Center(), HasUVs)
 	}
+
+	if opts.Single && len(objs) > 1 {
+		var newobjs []*Obj
+
+		for ind, o := range objs {
+			if ind == 0 {
+				newobjs = append(newobjs, o)
+			} else {
+				newobjs[0].Bounds = newobjs[0].Bounds.Union(o.Bounds)
+				newobjs[0].ObjVertices = append(newobjs[0].ObjVertices, o.ObjVertices...)
+			}
+		}
+
+		objs = newobjs
+	}
+
 	return objs, nil
 }
