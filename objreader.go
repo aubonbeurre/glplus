@@ -9,6 +9,12 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// SubObject ...
+type SubObject struct {
+	Name         string
+	FaceEndIndex int
+}
+
 // SubMaterial ...
 type SubMaterial struct {
 	Name         string
@@ -21,6 +27,7 @@ type Obj struct {
 	ObjVertices  []float32
 	Name         string
 	TexImg       *image.RGBA
+	SubObjects   []SubObject
 	SubMaterials []SubMaterial
 }
 
@@ -37,10 +44,13 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 	var findColor = func(faceIndex int) mgl32.Vec3 {
 		for _, material := range o.SubMaterials {
 			if faceIndex <= material.FaceEndIndex {
-				return colors[material.Name]
+				if col, ok := colors[material.Name]; ok {
+					return col
+				}
+				panic(fmt.Errorf("Unknown material %s", material.Name))
 			}
 		}
-		return mgl32.Vec3{0, 0, 0}
+		panic(fmt.Errorf("Unknown error"))
 	}
 
 	// convert our object into cube vertices for opengl
@@ -153,6 +163,11 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 			rgba = png
 		}
 
+		subobjects := make([]SubObject, 0)
+		for _, subo := range o.Subobjects {
+			subobjects = append(subobjects, SubObject{Name: subo.Name, FaceEndIndex: subo.FaceEndIndex})
+		}
+
 		materials := make([]SubMaterial, 0)
 		for _, subm := range o.SubMaterials {
 			materials = append(materials, SubMaterial{Name: subm.Name, FaceEndIndex: subm.FaceEndIndex})
@@ -163,6 +178,7 @@ func LoadObj(f io.Reader, png *image.RGBA, colors map[string]mgl32.Vec3) (objs [
 			Name:         sub.Name,
 			Bounds:       builder.build(),
 			TexImg:       rgba,
+			SubObjects:   subobjects,
 			SubMaterials: materials,
 		}
 

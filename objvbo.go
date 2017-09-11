@@ -116,7 +116,7 @@ func (m *ObjsRender) NormalizedMat() (mres mgl32.Mat4) {
 	length := m.Bounds().Length()
 	scale := 1 / length
 
-	mres = mgl32.HomogRotate3DX(-math.Pi / 2)
+	mres = mgl32.HomogRotate3DX(math.Pi / 2)
 	mres = mres.Mul4(mgl32.Scale3D(scale, scale, scale))
 	mres = mres.Mul4(mgl32.Translate3D(-center[0], -center[1], -center[2]))
 	return mres
