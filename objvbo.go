@@ -103,9 +103,9 @@ func (m *ObjsRender) Delete() {
 }
 
 // Draw ...
-func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, time float64) {
+func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64) {
 	for _, obj := range m.Objs {
-		obj.Draw(color1, camera, projection, model, light, time)
+		obj.Draw(color1, camera, projection, model, light, uvAngle)
 	}
 }
 
@@ -174,11 +174,11 @@ func (m *ObjRender) NormalizedMat() (mres mgl32.Mat4) {
 }
 
 // Draw ...
-func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, time float64) {
+func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64) {
 	m.progCoord.UseProgram()
 
 	matuv := mgl32.Translate2D(0.5, 0.5)
-	matuv = matuv.Mul3(mgl32.Rotate3DZ(-float32(time)))
+	matuv = matuv.Mul3(mgl32.Rotate3DZ(-float32(uvAngle)))
 	matuv = matuv.Mul3(mgl32.Translate2D(-0.5, -0.5))
 
 	m.progCoord.ProgramUniformMatrix4fv("projection", projection)

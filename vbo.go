@@ -201,10 +201,10 @@ func NewVBO(prog *GPProgram, options VBOOptions, verts []float32, indices []uint
 func NewVBOQuad(prog *GPProgram, x float32, y float32, w float32, h float32) (vbo *VBO) {
 
 	verts := [...]float32{
-		x, y, 0.0, 0, 0,
-		x + w, y, 0.0, 1, 0,
-		x + w, y + h, 0.0, 1, 1,
-		x, y + h, 0.0, 0, 1,
+		x, y, 0.0, 1, 0,
+		x + w, y, 0.0, 0, 0,
+		x + w, y + h, 0.0, 0, 1,
+		x, y + h, 0.0, 1, 1,
 	}
 
 	indices := [...]uint32{
