@@ -71,7 +71,7 @@ func subtestRenderOBJ(t *testing.T) {
 	defer fd.Close()
 
 	var objs []*Obj
-	if objs, err = LoadObj(fd, nil); err != nil {
+	if objs, err = LoadObj(fd, nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	objrender := NewObjVBO(objs[0])

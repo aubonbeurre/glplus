@@ -9,9 +9,9 @@ import (
 var (
 	sVertShaderObj = `#version 330
   ATTRIBUTE vec3 position;
-  ATTRIBUTE vec2 uvs;
+  ATTRIBUTE float uvs;
   ATTRIBUTE vec3 normal;
-  VARYINGOUT vec2 out_uvs;
+  VARYINGOUT float out_color;
   VARYINGOUT vec3 out_normal;
   uniform mat4 projection;
   uniform mat4 camera;
@@ -20,22 +20,49 @@ var (
   void main()
   {
       gl_Position = projection * camera * model * vec4(position, 1.0);
-      out_uvs = uvs;
+      out_color = uvs;
       out_normal = normalize(model * vec4(normal, 0.0)).xyz;
   }`
 
 	sFragShaderObj = `#version 330
   uniform vec4 color1;
   uniform vec3 light;
-  VARYINGIN vec2 out_uvs;
+  VARYINGIN float out_color;
   VARYINGIN vec3 out_normal;
   COLOROUT
 
+	vec3 unpackColor(float f) {
+	    vec3 color;
+	    color.b = floor(f / 256.0 / 256.0);
+	    color.g = floor((f - color.b * 256.0 * 256.0) / 256.0);
+	    color.r = floor(f - color.b * 256.0 * 256.0 - color.g * 256.0);
+	    // now we have a vec3 with the 3 components in range [0..255]. Let's normalize it!
+	    return color / 255.0;
+	}
+
   void main(void)
   {
+		vec3 color = color1.xyz + unpackColor(out_color);
   	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
-  	FRAGCOLOR = color1 * cosTheta;
+  	FRAGCOLOR = vec4(color, 1) * cosTheta;
   }`
+
+	sVertShaderObjTex = `#version 330
+	ATTRIBUTE vec3 position;
+	ATTRIBUTE vec2 uvs;
+	ATTRIBUTE vec3 normal;
+	VARYINGOUT vec2 out_uvs;
+	VARYINGOUT vec3 out_normal;
+	uniform mat4 projection;
+	uniform mat4 camera;
+	uniform mat4 model;
+
+	void main()
+	{
+			gl_Position = projection * camera * model * vec4(position, 1.0);
+			out_uvs = uvs;
+			out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+	}`
 
 	sFragShaderObjTex = `#version 330
   uniform vec4 color1;
@@ -132,7 +159,7 @@ func NewObjVBO(obj *Obj) (m *ObjRender) {
 		"normal",
 	}
 	if obj.TexImg != nil {
-		if m.progCoord, err = LoadShaderProgram(sVertShaderObj, sFragShaderObjTex, attribsNormal); err != nil {
+		if m.progCoord, err = LoadShaderProgram(sVertShaderObjTex, sFragShaderObjTex, attribsNormal); err != nil {
 			panic(err)
 		}
 
@@ -147,6 +174,9 @@ func NewObjVBO(obj *Obj) (m *ObjRender) {
 
 	opt := DefaultVBOOptions()
 	opt.Normals = 3
+	if obj.TexImg == nil {
+		opt.UV = 1 // packed color
+	}
 	m.vbo = NewVBO(m.progCoord, opt, obj.ObjVertices, nil)
 
 	return m
