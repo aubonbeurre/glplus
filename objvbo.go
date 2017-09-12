@@ -1,8 +1,6 @@
 package glplus
 
 import (
-	"image"
-	"image/color"
 	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -112,10 +110,9 @@ var (
 type ObjRender struct {
 	Obj *Obj
 
-	progCoord  *GPProgram
-	vbo        *VBO
-	tex        *GPTexture
-	colorTable []mgl32.Vec4
+	progCoord *GPProgram
+	vbo       *VBO
+	tex       *GPTexture
 }
 
 // ObjsRender ...
@@ -155,28 +152,27 @@ func (m *ObjsRender) Delete() {
 }
 
 // Draw ...
-func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64) {
+func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
 	for _, obj := range m.Objs {
-		obj.Draw(color1, camera, projection, model, light, uvAngle)
+		obj.Draw(color1, camera, projection, model, light, uvAngle, tex)
 	}
 }
 
 // NewObjsVBO ...
-func NewObjsVBO(objs []*Obj, colorTable []mgl32.Vec4) (m *ObjsRender) {
+func NewObjsVBO(objs []*Obj, hasColorTable bool) (m *ObjsRender) {
 	m = &ObjsRender{}
 	for _, obj := range objs {
-		m.Objs = append(m.Objs, NewObjVBO(obj, colorTable))
+		m.Objs = append(m.Objs, NewObjVBO(obj, hasColorTable))
 	}
 	return m
 }
 
 // NewObjVBO ...
-func NewObjVBO(obj *Obj, colorTable []mgl32.Vec4) (m *ObjRender) {
+func NewObjVBO(obj *Obj, hasColorTable bool) (m *ObjRender) {
 	var err error
 
 	m = &ObjRender{
-		Obj:        obj,
-		colorTable: colorTable,
+		Obj: obj,
 	}
 
 	var attribs = []string{
@@ -192,21 +188,8 @@ func NewObjVBO(obj *Obj, colorTable []mgl32.Vec4) (m *ObjRender) {
 		if m.tex, err = NewRGBATexture(obj.TexImg, true, false); err != nil {
 			panic(err)
 		}
-	} else if colorTable != nil {
+	} else if hasColorTable {
 		if m.progCoord, err = LoadShaderProgram(sVertShaderObjColorTable, sFragShaderObjColorTable, attribs); err != nil {
-			panic(err)
-		}
-
-		newm := image.NewRGBA(image.Rect(0, 0, len(colorTable), 1))
-		for i, c := range colorTable {
-			newm.Set(i, 0, color.RGBA{
-				uint8(c.X() * 255.0),
-				uint8(c.Y() * 255.0),
-				uint8(c.Z() * 255.0),
-				uint8(c.W() * 255.0),
-			})
-		}
-		if m.tex, err = NewRGBATexture(newm, false, false); err != nil {
 			panic(err)
 		}
 	} else {
@@ -246,7 +229,7 @@ func (m *ObjRender) NormalizedMat() (mres mgl32.Mat4) {
 }
 
 // Draw ...
-func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64) {
+func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
 	m.progCoord.UseProgram()
 
 	matuv := mgl32.Translate2D(0.5, 0.5)
@@ -262,6 +245,9 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 	if m.tex != nil {
 		m.tex.BindTexture(0)
 		m.progCoord.ProgramUniform1i("tex1", 0)
+	} else if tex != nil {
+		tex.BindTexture(0)
+		m.progCoord.ProgramUniform1i("tex1", 0)
 	}
 
 	m.vbo.Bind(m.progCoord)
@@ -275,6 +261,8 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 	m.vbo.Unbind(m.progCoord)
 
 	if m.tex != nil {
+		m.tex.UnbindTexture(0)
+	} else if tex != nil {
 		m.tex.UnbindTexture(0)
 	}
 

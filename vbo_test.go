@@ -75,14 +75,14 @@ func subtestRenderOBJ(t *testing.T) {
 	if objs, err = LoadObj(fd, &ObjOptions{}); err != nil {
 		t.Fatal(err)
 	}
-	objrender := NewObjVBO(objs[0], nil)
+	objrender := NewObjVBO(objs[0], false)
 	defer objrender.Delete()
 
 	mat := objrender.NormalizedMat()
 
 	checkGlError(t)
 
-	objrender.Draw([4]float32{1, 1, 1, 1}, mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0)
+	objrender.Draw([4]float32{1, 1, 1, 1}, mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0, nil)
 
 	checkGlError(t)
 }
