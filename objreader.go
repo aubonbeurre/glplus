@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"strings"
 
 	"github.com/aubonbeurre/go-obj/obj"
 )
@@ -28,6 +29,7 @@ type Obj struct {
 	TexImg       *image.RGBA
 	SubObjects   []SubObject
 	SubMaterials []SubMaterial
+	Marker       Bounds
 }
 
 // ObjOptions ...
@@ -50,6 +52,9 @@ func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 	var findColor = func(faceIndex int) (float32, error) {
 		for _, material := range o.SubMaterials {
 			if faceIndex <= material.FaceEndIndex {
+				if material.Name == "None" {
+					return 0, nil
+				}
 				if col, ok := opts.Colors[material.Name]; ok {
 					return col, nil
 				}
@@ -190,6 +195,8 @@ func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 		for ind, o := range objs {
 			if ind == 0 {
 				newobjs = append(newobjs, o)
+			} else if strings.HasPrefix(o.Name, "marker") {
+				newobjs[0].Marker = o.Bounds
 			} else {
 				newobjs[0].Bounds = newobjs[0].Bounds.Union(o.Bounds)
 				newobjs[0].ObjVertices = append(newobjs[0].ObjVertices, o.ObjVertices...)

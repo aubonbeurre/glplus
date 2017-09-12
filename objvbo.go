@@ -35,7 +35,8 @@ var (
 
   void main(void)
   {
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
+		// "out_uvs / 1000" is there to trick the driver to use it
+  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3 + out_uvs / 1000, 1.0);
   	FRAGCOLOR = color1 * cosTheta;
   }`
 
@@ -213,7 +214,6 @@ func NewObjVBO(obj *Obj, colorTable []mgl32.Vec4) (m *ObjRender) {
 			panic(err)
 		}
 	}
-
 	opt := DefaultVBOOptions()
 	opt.Normals = 3
 	if obj.TexImg == nil {
