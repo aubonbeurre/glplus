@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"os"
@@ -301,9 +302,11 @@ func NewFont(reader io.Reader) (font *Font, err error) {
 		}
 	}
 
-	//w, _ := os.Create("/Users/aparente/font.png")
-	//defer w.Close()
-	//png.Encode(w, dst) //Encode writes the Image m to w in PNG format.
+	if false {
+		w, _ := os.Create("font.png")
+		defer w.Close()
+		png.Encode(w, dst) //Encode writes the Image m to w in PNG format.
+	}
 
 	gray := image.NewGray(dst.Bounds())
 	if gray.Stride != gray.Rect.Size().X {
