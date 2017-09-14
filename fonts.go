@@ -271,7 +271,7 @@ func NewFont(reader io.Reader) (font *Font, err error) {
 	face = truetype.NewFace(f, &truetype.Options{Size: fontSize})
 	height := face.Metrics().Height.Round()
 	descent := face.Metrics().Descent.Round()
-	fmt.Printf("Height: %d\n", height)
+	//fmt.Printf("Height: %d\n", height)
 
 	dst := image.NewRGBA(image.Rect(0, 0, height*16, height*16))
 	black := color.RGBA{0, 0, 0, 255}
