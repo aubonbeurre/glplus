@@ -87,7 +87,7 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 	}
 
 	f.program.UseProgram()
-	f.texture.BindTexture(0)
+	f.Texture.BindTexture(0)
 	s.vbo.Bind(f.program)
 
 	var matrixfont = mat.Mul3(mgl32.Scale2D(scale, scale))
@@ -103,7 +103,7 @@ func (s *String) Draw(f *Font, color [4]float32, bg [4]float32, mat mgl32.Mat3, 
 
 	s.vbo.Draw()
 
-	f.texture.UnbindTexture(0)
+	f.Texture.UnbindTexture(0)
 	s.vbo.Unbind(f.program)
 	f.program.UnuseProgram()
 
@@ -133,16 +133,16 @@ func (s *String) createVertexBuffer(f *Font) {
 	i := 0
 	ii := 0
 	var jj uint32
-	var dv = float32(f.cellssize) / float32(f.texture.Size.Y)
+	var dv = float32(f.Cellssize) / float32(f.Texture.Size.Y)
 	for j := 0; j < n; j++ {
 		var c = s.Chars[j]
 		var x = curX
 		var y float32
-		var w = float32(f.advances[c.Index])
-		var h = float32(f.cellssize)
-		var u = float32(c.X*f.cellssize) / float32(f.texture.Size.X)
-		var v = float32(c.Y*f.cellssize) / float32(f.texture.Size.Y)
-		var du = float32(w) / float32(f.texture.Size.X)
+		var w = float32(f.Advances[c.Index])
+		var h = float32(f.Cellssize)
+		var u = float32(c.X*f.Cellssize) / float32(f.Texture.Size.X)
+		var v = float32(c.Y*f.Cellssize) / float32(f.Texture.Size.Y)
+		var du = float32(w) / float32(f.Texture.Size.X)
 
 		verts[i+0] = x
 		verts[i+1] = y
@@ -191,17 +191,18 @@ func (s *String) createVertexBuffer(f *Font) {
 
 // Font ...
 type Font struct {
-	texture   *GPTexture
-	program   *GPProgram
-	rows      int
-	cellssize int
-	advances  []int
+	Texture   *GPTexture
+	Cellssize int
+	Advances  []int
+
+	program *GPProgram
+	rows    int
 }
 
 // DeleteFont ...
 func (f *Font) DeleteFont() {
-	if f.texture != nil {
-		f.texture.DeleteTexture()
+	if f.Texture != nil {
+		f.Texture.DeleteTexture()
 	}
 	if f.program != nil {
 		f.program.DeleteProgram()
@@ -210,12 +211,12 @@ func (f *Font) DeleteFont() {
 
 // BindTexture ...
 func (f *Font) BindTexture(unit int) {
-	f.texture.BindTexture(unit)
+	f.Texture.BindTexture(unit)
 }
 
 // UnbindTexture ...
 func (f *Font) UnbindTexture(unit int) {
-	f.texture.UnbindTexture(unit)
+	f.Texture.UnbindTexture(unit)
 }
 
 // NewString ...
@@ -231,7 +232,7 @@ func (f *Font) NewString(s string) *String {
 		var index = ascii - 32
 		var xoff = index % f.rows
 		var yoff = index / f.rows
-		width += f.advances[index]
+		width += f.Advances[index]
 
 		//fmt.Printf("ascii: %d, x: %d, y: %d\n", ascii, xoff, yoff)
 		result.Chars[i].Index = index
@@ -239,7 +240,7 @@ func (f *Font) NewString(s string) *String {
 		result.Chars[i].Y = yoff
 
 	}
-	result.Size = image.Point{width, f.cellssize}
+	result.Size = image.Point{width, f.Cellssize}
 	return result
 }
 
@@ -332,10 +333,10 @@ func NewFont(reader io.Reader) (font *Font, err error) {
 		gray.Pix)
 
 	font = &Font{
-		texture:   texture,
+		Texture:   texture,
 		rows:      16,
-		cellssize: gray.Rect.Size().X / 16,
-		advances:  advances,
+		Cellssize: gray.Rect.Size().X / 16,
+		Advances:  advances,
 	}
 
 	return font, nil
