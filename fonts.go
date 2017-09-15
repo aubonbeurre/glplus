@@ -19,6 +19,10 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+const (
+	sUseGray = false
+)
+
 var (
 	// fragment shader
 	fragShaderFont = `#version 330
@@ -309,33 +313,46 @@ func NewFont(reader io.Reader) (font *Font, err error) {
 		png.Encode(w, dst) //Encode writes the Image m to w in PNG format.
 	}
 
-	gray := image.NewGray(dst.Bounds())
-	if gray.Stride != gray.Rect.Size().X {
-		return nil, fmt.Errorf("unsupported stride")
-	}
-	draw.Draw(gray, gray.Bounds(), dst, image.Point{0, 0}, draw.Src)
-
-	var texture = GenTexture(gray.Rect.Size())
-
+	texture := GenTexture(dst.Rect.Size())
 	texture.BindTexture(0)
 	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MIN_FILTER, Gl.LINEAR)
 	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_MAG_FILTER, Gl.LINEAR)
 	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_S, Gl.CLAMP_TO_EDGE)
 	Gl.TexParameteri(Gl.TEXTURE_2D, Gl.TEXTURE_WRAP_T, Gl.CLAMP_TO_EDGE)
-	Gl.TexImage2D(
-		Gl.TEXTURE_2D,
-		0,
-		Gl.R8,
-		gray.Rect.Size().X,
-		gray.Rect.Size().Y,
-		Gl.RED,
-		Gl.UNSIGNED_BYTE,
-		gray.Pix)
+
+	if sUseGray {
+		gray := image.NewGray(dst.Bounds())
+		if gray.Stride != gray.Rect.Size().X {
+			return nil, fmt.Errorf("unsupported stride")
+		}
+		draw.Draw(gray, gray.Bounds(), dst, image.Point{0, 0}, draw.Src)
+
+		Gl.TexImage2D(
+			Gl.TEXTURE_2D,
+			0,
+			Gl.R8,
+			gray.Rect.Size().X,
+			gray.Rect.Size().Y,
+			Gl.RED,
+			Gl.UNSIGNED_BYTE,
+			gray.Pix)
+	} else {
+		Gl.TexImage2D(
+			Gl.TEXTURE_2D,
+			0,
+			Gl.RGBA,
+			dst.Rect.Size().X,
+			dst.Rect.Size().Y,
+			Gl.RGBA,
+			Gl.UNSIGNED_BYTE,
+			dst.Pix)
+	}
+	texture.UnbindTexture(0)
 
 	font = &Font{
 		Texture:   texture,
 		rows:      16,
-		Cellssize: gray.Rect.Size().X / 16,
+		Cellssize: dst.Rect.Size().X / 16,
 		Advances:  advances,
 	}
 
