@@ -122,51 +122,6 @@ var (
 		FRAGCOLOR = out_color * texcolor;
   }`
 
-	sVertShaderObjColorTable = `#version 330
-	ATTRIBUTE vec3 position;
-	ATTRIBUTE float uvs;
-	ATTRIBUTE vec3 normal;
-	VARYINGOUT float out_uvs;
-	VARYINGOUT vec4 out_color;
-	uniform vec3 light;
-	uniform mat4 mProjViewModel;
-	uniform mat4 mViewModel;
-	uniform mat4 mView;
-	uniform vec4 ambient;
-	uniform float shininess;
-	uniform vec4 specular;
-	uniform vec4 diffuse;
-
-	void main()
-	{
-		// set the specular term to black
-		vec4 spec = vec4(0.0);
-
-		vec3 l_dir = normalize(mView * vec4(light, 0)).xyz;
-		vec3 n = normalize(mViewModel * vec4(normal, 0)).xyz;
-		float intensity = max(dot(n, l_dir), 0.0);
-
-		// if the vertex is lit compute the specular term
-		if (intensity > 0.0) {
-
-				// compute position in camera space
-				vec3 pos = vec3(mViewModel * vec4(position, 1)).xyz;
-				// compute eye vector and normalize it
-				vec3 eye = normalize(-pos);
-				// compute the half vector
-				vec3 h = normalize(l_dir + eye);
-
-				// compute the specular term into spec
-				float intSpec = max(dot(h,n), 0.0);
-				spec = specular * pow(intSpec, shininess);
-		}
-		// add the specular term
-		out_color = max(intensity *  diffuse + spec, ambient);
-
-		out_uvs = uvs;
-		gl_Position = mProjViewModel * vec4(position, 1.0);
-	}`
-
 	sFragShaderObjColorTable = `#version 330
 	uniform sampler2D tex1;
   VARYINGIN float out_uvs;
@@ -263,7 +218,7 @@ func NewObjVBO(obj *Obj, hasColorTable bool) (m *ObjRender) {
 			panic(err)
 		}
 	} else if hasColorTable {
-		if m.progCoord, err = LoadShaderProgram(sVertShaderObjColorTable, sFragShaderObjColorTable, attribs); err != nil {
+		if m.progCoord, err = LoadShaderProgram(sVertShaderObj, sFragShaderObjColorTable, attribs); err != nil {
 			panic(err)
 		}
 	} else {
