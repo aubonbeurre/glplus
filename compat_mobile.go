@@ -320,6 +320,7 @@ type Context struct {
 	TRUE                                         int
 	R8                                           int
 	RED                                          int
+	RGBA32F                                      int
 }
 
 func NewContext(DrawContext interface{}) *Context {
@@ -609,6 +610,7 @@ func NewContext(DrawContext interface{}) *Context {
 		TRUE:                               gl.TRUE,
 		R8:                                 gl.R8,
 		RED:                                gl.RED,
+		RGBA32F:                            gl.RGBA32F,
 	}
 	//c.Ctx, c.Worker = gl.NewContext()
 	c.ctx = DrawContext.(gl.Context)
@@ -1040,8 +1042,7 @@ func (c *Context) GetProgramParameteri(program *Program, pname int) int {
 // Returns the value of the program parameter that corresponds to a supplied pname
 // which is interpreted as a bool.
 func (c *Context) GetProgramParameterb(program *Program, pname int) bool {
-	log.Println("GetProgramParameterb not found on mobile system")
-	return false
+	return c.ctx.GetProgrami(program.Program, gl.Enum(pname)) == gl.TRUE
 }
 
 // Returns information about the last error that occurred during
@@ -1308,6 +1309,9 @@ func (c *Context) UniformMatrix4fv(location *UniformLocation, transpose bool, va
 
 // Set the program object to use for rendering.
 func (c *Context) UseProgram(program *Program) {
+	if program == nil {
+		return
+	}
 	c.ctx.UseProgram(program.Program)
 }
 
