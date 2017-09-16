@@ -13,20 +13,21 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT float out_uvs;
 	VARYINGOUT vec3 out_normal;
-  uniform mat4 projection;
-  uniform mat4 camera;
-  uniform mat4 model;
+	uniform mat4 mProjViewModel;
+	uniform mat4 mViewModel;
+	uniform mat4 mView;
 
   void main()
   {
-      gl_Position = projection * camera * model * vec4(position, 1.0);
-      out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+      out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
 			out_uvs = uvs;
+			gl_Position = mProjViewModel * vec4(position, 1.0);
   }`
 
 	sFragShaderObj = `#version 330
   uniform vec4 color1;
   uniform vec3 light;
+	uniform mat4 mView;
 	VARYINGIN float out_uvs;
 	VARYINGIN vec3 out_normal;
   COLOROUT
@@ -34,7 +35,7 @@ var (
   void main(void)
   {
 		// "out_uvs / 1000" is there to trick the driver to use it
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3 + out_uvs / 1000.0, 1.0);
+  	float cosTheta = clamp(dot(normalize(mView * vec4(light, 0)).xyz, normalize(out_normal)), 0.3 + out_uvs / 1000.0, 1.0);
   	FRAGCOLOR = color1 * cosTheta;
   }`
 
@@ -44,20 +45,21 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT vec2 out_uvs;
 	VARYINGOUT vec3 out_normal;
-	uniform mat4 projection;
-	uniform mat4 camera;
-	uniform mat4 model;
+	uniform mat4 mProjViewModel;
+	uniform mat4 mViewModel;
+	uniform mat4 mView;
 
 	void main()
 	{
-			gl_Position = projection * camera * model * vec4(position, 1.0);
 			out_uvs = uvs;
-			out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+			out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
+			gl_Position = mProjViewModel * vec4(position, 1.0);
 	}`
 
 	sFragShaderObjTex = `#version 330
   uniform vec4 color1;
   uniform vec3 light;
+	uniform mat4 mView;
 	uniform sampler2D tex1;
 	uniform mat3 matuv;
   VARYINGIN vec2 out_uvs;
@@ -69,9 +71,8 @@ var (
 		vec2 new_uvs = vec2(1.0-out_uvs.x, out_uvs.y);
 		new_uvs = (matuv * vec3(new_uvs, 1)).xy;
 		vec4 texcolor = TEXTURE2D(tex1, new_uvs);
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
-		FRAGCOLOR = mix(color1, texcolor, texcolor.w);
-  	FRAGCOLOR = FRAGCOLOR * cosTheta;
+  	float cosTheta = clamp(dot(normalize(mView * vec4(light, 0)).xyz, normalize(out_normal)), 0.3, 1.0);
+		FRAGCOLOR = mix(color1, texcolor, texcolor.w) * cosTheta;
   }`
 
 	sVertShaderObjColorTable = `#version 330
@@ -80,19 +81,20 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT float out_uvs;
 	VARYINGOUT vec3 out_normal;
-	uniform mat4 projection;
-	uniform mat4 camera;
-	uniform mat4 model;
+	uniform mat4 mProjViewModel;
+	uniform mat4 mViewModel;
+	uniform mat4 mView;
 
 	void main()
 	{
-			gl_Position = projection * camera * model * vec4(position, 1.0);
 			out_uvs = uvs;
-			out_normal = normalize(model * vec4(normal, 0.0)).xyz;
+			out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
+			gl_Position = mProjViewModel * vec4(position, 1.0);
 	}`
 
 	sFragShaderObjColorTable = `#version 330
   uniform vec3 light;
+	uniform mat4 mView;
 	uniform sampler2D tex1;
   VARYINGIN float out_uvs;
   VARYINGIN vec3 out_normal;
@@ -101,7 +103,7 @@ var (
   void main(void)
   {
 		vec4 texcolor = TEXTURE2D(tex1, vec2(out_uvs, 0));
-  	float cosTheta = clamp(dot(light, normalize(out_normal)), 0.3, 1.0);
+  	float cosTheta = clamp(dot(normalize(mView * vec4(light, 0)).xyz, normalize(out_normal)), 0.3, 1.0);
   	FRAGCOLOR = texcolor * cosTheta;
   }`
 )
@@ -229,9 +231,11 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 	matuv = matuv.Mul3(mgl32.Rotate3DZ(-float32(uvAngle)))
 	matuv = matuv.Mul3(mgl32.Translate2D(-0.5, -0.5))
 
-	m.progCoord.ProgramUniformMatrix4fv("projection", projection)
-	m.progCoord.ProgramUniformMatrix4fv("camera", camera)
-	m.progCoord.ProgramUniformMatrix4fv("model", model)
+	mViewModel := camera.Mul4(model)
+	mProjViewModel := projection.Mul4(mViewModel)
+	m.progCoord.ProgramUniformMatrix4fv("mViewModel", mViewModel)
+	m.progCoord.ProgramUniformMatrix4fv("mProjViewModel", mProjViewModel)
+	m.progCoord.ProgramUniformMatrix4fv("mView", camera)
 	m.progCoord.ProgramUniform3fv("light", light)
 	m.progCoord.ProgramUniformMatrix3fv("matuv", matuv)
 
