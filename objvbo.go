@@ -13,30 +13,36 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT float out_uvs;
 	VARYINGOUT vec3 out_normal;
+	VARYINGOUT vec4 out_color;
 	uniform mat4 mProjViewModel;
 	uniform mat4 mViewModel;
 	uniform mat4 mView;
+	uniform vec4 ambient;
+	uniform float shininess;
+	uniform vec4 specular;
+	uniform vec4 diffuse;
 
   void main()
   {
       out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
 			out_uvs = uvs;
+			out_color = diffuse;
 			gl_Position = mProjViewModel * vec4(position, 1.0);
   }`
 
 	sFragShaderObj = `#version 330
-  uniform vec4 color1;
   uniform vec3 light;
 	uniform mat4 mView;
 	VARYINGIN float out_uvs;
 	VARYINGIN vec3 out_normal;
+	VARYINGIN vec4 out_color;
   COLOROUT
 
   void main(void)
   {
 		// "out_uvs / 1000" is there to trick the driver to use it
   	float cosTheta = clamp(dot(normalize(mView * vec4(light, 0)).xyz, normalize(out_normal)), 0.3 + out_uvs / 1000.0, 1.0);
-  	FRAGCOLOR = color1 * cosTheta;
+  	FRAGCOLOR = out_color * cosTheta;
   }`
 
 	sVertShaderObjTex = `#version 330
@@ -45,25 +51,31 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT vec2 out_uvs;
 	VARYINGOUT vec3 out_normal;
+	VARYINGOUT vec4 out_color;
 	uniform mat4 mProjViewModel;
 	uniform mat4 mViewModel;
 	uniform mat4 mView;
+	uniform vec4 ambient;
+	uniform float shininess;
+	uniform vec4 specular;
+	uniform vec4 diffuse;
 
 	void main()
 	{
 			out_uvs = uvs;
 			out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
+			out_color = diffuse;
 			gl_Position = mProjViewModel * vec4(position, 1.0);
 	}`
 
 	sFragShaderObjTex = `#version 330
-  uniform vec4 color1;
   uniform vec3 light;
 	uniform mat4 mView;
 	uniform sampler2D tex1;
 	uniform mat3 matuv;
   VARYINGIN vec2 out_uvs;
   VARYINGIN vec3 out_normal;
+	VARYINGIN vec4 out_color;
   COLOROUT
 
   void main(void)
@@ -72,7 +84,7 @@ var (
 		new_uvs = (matuv * vec3(new_uvs, 1)).xy;
 		vec4 texcolor = TEXTURE2D(tex1, new_uvs);
   	float cosTheta = clamp(dot(normalize(mView * vec4(light, 0)).xyz, normalize(out_normal)), 0.3, 1.0);
-		FRAGCOLOR = mix(color1, texcolor, texcolor.w) * cosTheta;
+		FRAGCOLOR = mix(out_color, texcolor, texcolor.w) * cosTheta;
   }`
 
 	sVertShaderObjColorTable = `#version 330
@@ -81,14 +93,20 @@ var (
 	ATTRIBUTE vec3 normal;
 	VARYINGOUT float out_uvs;
 	VARYINGOUT vec3 out_normal;
+	VARYINGOUT vec4 out_color;
 	uniform mat4 mProjViewModel;
 	uniform mat4 mViewModel;
 	uniform mat4 mView;
+	uniform vec4 ambient;
+	uniform float shininess;
+	uniform vec4 specular;
+	uniform vec4 diffuse;
 
 	void main()
 	{
 			out_uvs = uvs;
 			out_normal = normalize(mViewModel * vec4(normal, 0.0)).xyz;
+			out_color = diffuse;
 			gl_Position = mProjViewModel * vec4(position, 1.0);
 	}`
 
@@ -98,6 +116,7 @@ var (
 	uniform sampler2D tex1;
   VARYINGIN float out_uvs;
   VARYINGIN vec3 out_normal;
+	VARYINGIN vec4 out_color;
   COLOROUT
 
   void main(void)
@@ -154,9 +173,9 @@ func (m *ObjsRender) Delete() {
 }
 
 // Draw ...
-func (m *ObjsRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
+func (m *ObjsRender) Draw(material *Material, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
 	for _, obj := range m.Objs {
-		obj.Draw(color1, camera, projection, model, light, uvAngle, tex)
+		obj.Draw(material, camera, projection, model, light, uvAngle, tex)
 	}
 }
 
@@ -224,7 +243,7 @@ func (m *ObjRender) NormalizedMat() (mres mgl32.Mat4) {
 }
 
 // Draw ...
-func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
+func (m *ObjRender) Draw(material *Material, camera, projection, model mgl32.Mat4, light mgl32.Vec3, uvAngle float64, tex *GPTexture) {
 	m.progCoord.UseProgram()
 
 	matuv := mgl32.Translate2D(0.5, 0.5)
@@ -248,7 +267,7 @@ func (m *ObjRender) Draw(color1 [4]float32, camera, projection, model mgl32.Mat4
 	}
 
 	m.vbo.Bind(m.progCoord)
-	m.progCoord.ProgramUniform4fv("color1", color1)
+	m.progCoord.Material(material)
 
 	var err error
 	if err = m.progCoord.ValidateProgram(); err != nil {
