@@ -68,6 +68,18 @@ func (p *GPProgram) UnuseProgram() {
 	Gl.UseProgram(nil)
 }
 
+// Material ...
+func (p *GPProgram) Material(m *Material) {
+	toSlice4 := func(in []float32) (res [4]float32) {
+		return [4]float32{in[0], in[1], in[2], in[3]}
+	}
+
+	p.ProgramUniform4fv("ambient", toSlice4(m.Ambient))
+	p.ProgramUniform1f("shininess", m.Shininess)
+	p.ProgramUniform4fv("specular", toSlice4(m.Specular))
+	p.ProgramUniform4fv("diffuse", toSlice4(m.Diffuse))
+}
+
 // ProgramUniform1f ...
 func (p *GPProgram) ProgramUniform1f(uniform string, value float32) {
 	var uniformloc = p.GetUniformLocation(uniform)
