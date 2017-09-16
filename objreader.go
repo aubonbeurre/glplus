@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"math"
 	"strings"
 
 	"github.com/aubonbeurre/go-obj/obj"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // SubObject ...
@@ -32,6 +34,18 @@ type Obj struct {
 	Marker       Bounds
 }
 
+// NormalizedMat ...
+func (m *Obj) NormalizedMat() (mres mgl32.Mat4) {
+	center := m.Bounds.Center()
+	length := m.Bounds.Length()
+	scale := 1 / length
+
+	mres = mgl32.HomogRotate3DX(math.Pi / 2)
+	mres = mres.Mul4(mgl32.Scale3D(scale, scale, scale))
+	mres = mres.Mul4(mgl32.Translate3D(-center[0], -center[1], -center[2]))
+	return mres
+}
+
 // ObjOptions ...
 type ObjOptions struct {
 	TexImg *image.RGBA
@@ -41,10 +55,10 @@ type ObjOptions struct {
 
 // LoadObj ...
 // 'colors' relate to usemtl
-func LoadObj(f io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
+func LoadObj(input io.Reader, opts *ObjOptions) (objs []*Obj, err error) {
 
 	var o *obj.Object
-	o, err = obj.NewReader(f).Read()
+	o, err = obj.NewReader(input).Read()
 	if err != nil {
 		return nil, err
 	}

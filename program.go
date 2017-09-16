@@ -173,6 +173,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	Gl.CompileShader(vs)
 
 	if !Gl.GetShaderiv(vs, Gl.COMPILE_STATUS) {
+		fmt.Println(vertShader)
 		return nil, fmt.Errorf("Failed to compile the vertex shader!\n%s", GetShaderInfoLog(vs))
 	}
 
@@ -182,6 +183,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	Gl.CompileShader(fs)
 
 	if !Gl.GetShaderiv(fs, Gl.COMPILE_STATUS) {
+		fmt.Println(fragShader)
 		return nil, fmt.Errorf("Failed to compile the fragment shader!\n%s", GetShaderInfoLog(fs))
 	}
 

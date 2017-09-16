@@ -218,14 +218,7 @@ func (m *ObjRender) Delete() {
 
 // NormalizedMat ...
 func (m *ObjRender) NormalizedMat() (mres mgl32.Mat4) {
-	center := m.Obj.Bounds.Center()
-	length := m.Obj.Bounds.Length()
-	scale := 1 / length
-
-	mres = mgl32.HomogRotate3DX(math.Pi / 2)
-	mres = mres.Mul4(mgl32.Scale3D(scale, scale, scale))
-	mres = mres.Mul4(mgl32.Translate3D(-center[0], -center[1], -center[2]))
-	return mres
+	return m.Obj.NormalizedMat()
 }
 
 // Draw ...
