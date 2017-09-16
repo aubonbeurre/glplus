@@ -82,7 +82,7 @@ func subtestRenderOBJ(t *testing.T) {
 
 	checkGlError(t)
 
-	objrender.Draw([4]float32{1, 1, 1, 1}, mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0, nil)
+	objrender.Draw(MakeDefaultMaterial(), mgl32.Ident4(), mgl32.Ident4(), mat, mgl32.Vec3{1, 0, 0}, 0, nil)
 
 	checkGlError(t)
 }
