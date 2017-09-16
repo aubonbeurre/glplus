@@ -1220,7 +1220,13 @@ func (c *Context) TexImage2D(target, level, internalFormat, width, height, forma
 	}
 
 	switch t := data.(type) {
-	case []uint8, []float32:
+	case []uint8:
+		buf := make([]byte, 0, len(t))
+		for _, c := range t {
+			buf = append(buf, byte(c))
+		}
+		c.ctx.TexImage2D(gl.Enum(target), level, width, height, gl.Enum(format), gl.Enum(kind), buf)
+	case []float32:
 		c.ctx.TexImage2D(gl.Enum(target), level, width, height, gl.Enum(format), gl.Enum(kind), *(*[]byte)(unsafe.Pointer(&t)))
 	default:
 		log.Println("Warning: TexImage2D does not support your requested type (yet)")
