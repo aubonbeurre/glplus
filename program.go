@@ -155,7 +155,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	}
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "android" {
-		vertShader = strings.Replace(vertShader, "#version 330\n", "precision mediump float;\n", -1)
+		vertShader = strings.Replace(vertShader, "#version 330\n", "precision highp float;\n", -1)
 		vertShader = strings.Replace(vertShader, "ATTRIBUTE", "attribute", -1)
 		vertShader = strings.Replace(vertShader, "VARYINGOUT", "varying", -1)
 		vertShader = strings.Replace(vertShader, "TEXTURE2D", "texture2D", -1)
@@ -166,7 +166,7 @@ func LoadShaderProgram(vertShader string, fragShader string, attribs []string) (
 	}
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "android" {
-		fragShader = strings.Replace(fragShader, "#version 330\n", "precision mediump float;\n", -1)
+		fragShader = strings.Replace(fragShader, "#version 330\n", "precision highp float;\n", -1)
 		fragShader = strings.Replace(fragShader, "VARYINGIN", "varying", -1)
 		fragShader = strings.Replace(fragShader, "COLOROUT", "", -1)
 		fragShader = strings.Replace(fragShader, "FRAGCOLOR", "gl_FragColor", -1)
