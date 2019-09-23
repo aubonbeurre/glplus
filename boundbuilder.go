@@ -78,6 +78,7 @@ func (b Bounds) Union(o Bounds) Bounds {
 	return build.build()
 }
 
+// ComputeBounds ...
 func ComputeBounds(vertices []mgl32.Vec3) Bounds {
 	var build BoundBuilder
 	build.reset()
