@@ -77,3 +77,12 @@ func (b Bounds) Union(o Bounds) Bounds {
 	build.include64(b.X.Hi, b.Y.Hi, b.Z.Hi)
 	return build.build()
 }
+
+func ComputeBounds(vertices []mgl32.Vec3) Bounds {
+	var build BoundBuilder
+	build.reset()
+	for _, pt := range vertices {
+		build.include32(pt.X(), pt.Y(), pt.Z())
+	}
+	return build.build()
+}
