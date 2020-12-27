@@ -306,7 +306,7 @@ func NewFont(reader io.Reader) (font *Font, err error) {
 	var offy = height
 	for i := 32; i < 255; i++ {
 		d.Dot = fixed.P(offx, offy-descent)
-		var strc = string(i)
+		var strc = string(rune(i))
 		d.DrawString(strc)
 		if advance, ok := face.GlyphAdvance(rune(strc[0])); ok {
 			advances[i-32] = advance.Round()
