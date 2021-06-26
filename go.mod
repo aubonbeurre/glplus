@@ -2,7 +2,7 @@ module github.com/aubonbeurre/glplus
 
 go 1.16
 
-replace github.com/aubonbeurre/go-obj => ../go-obj
+// replace github.com/aubonbeurre/go-obj => ../go-obj
 
 require (
 	github.com/aubonbeurre/go-obj v0.4.0
