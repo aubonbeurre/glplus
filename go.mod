@@ -15,7 +15,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20210621113107-84c6004145de
 	github.com/inkyblackness/imgui-go v1.12.0
 	github.com/stretchr/testify v1.7.0 // indirect
-	golang.org/x/image v0.0.0-20210622092929-e6eecd499c2c
+	golang.org/x/image v0.5.0
 	golang.org/x/mobile v0.0.0-20210614202936-7c8f154d1008
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
